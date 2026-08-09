@@ -1,0 +1,126 @@
+<div class="patient-detail-container">
+  @if (isLoading()) {
+    <div class="loading-state">
+      <span class="body-large text-secondary">Loading patient details...</span>
+    </div>
+  } @else if (errorMsg()) {
+    <div class="error-state">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h2 class="title-medium">{{ errorMsg() }}</h2>
+      <button mat-button routerLink="/patients">Back to Patients</button>
+    </div>
+  } @else {
+    <!-- Header Row -->
+    <div class="header-row">
+      <div class="header-left">
+        <button
+          mat-icon-button
+          routerLink="/patients"
+          class="back-btn"
+          aria-label="Go back to Patients list"
+        >
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h1 class="title-large Montserrat-font">Patient Details</h1>
+      </div>
+      <div class="header-actions">
+        <input type="file" accept="application/pdf" style="display: none;" #pdfInput (change)="onFileSelected($event)" />
+        <button mat-stroked-button class="action-btn pdf-btn" (click)="onPdfClick(pdfInput)">
+          <mat-icon class="btn-icon">{{ hasPdf() ? 'visibility' : 'upload_file' }}</mat-icon>
+          {{ hasPdf() ? 'View PDF' : 'Upload PDF' }}
+        </button>
+        <button mat-raised-button class="action-btn info-btn" (click)="openMoreInfoDialog()">
+          <mat-icon class="btn-icon">info</mat-icon>
+          More Info
+        </button>
+      </div>
+    </div>
+
+    <!-- Basic Info Card -->
+    <div class="basic-info-card hover-lift">
+      <div class="card-primary-info">
+        <div class="case-badge-container">
+          <span class="case-badge">{{ patient()?.caseNo }}</span>
+        </div>
+        <div class="name-container">
+          <h2 class="patient-name Montserrat-font">{{ patient()?.name }}</h2>
+          <span class="age-gender-sub">{{ getAgeGender(patient()) }}</span>
+        </div>
+      </div>
+
+      <div class="card-details-grid">
+        <div class="detail-item">
+          <span class="detail-label">Mobile No</span>
+          <span class="detail-value">{{ getFormattedPhoneNumbers(patient()) }}</span>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label-container" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="detail-label" style="margin-bottom: 0;">Drug Allergies</span>
+            <button mat-icon-button (click)="openMoreInfoDialog(true)" class="inline-add-btn" aria-label="Add drug allergy" style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.04);">
+              <mat-icon style="font-size: 16px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;">add</mat-icon>
+            </button>
+          </div>
+          <div class="badge-list">
+            @for (allergy of patient()?.drugAllergies; track allergy) {
+              <span class="badge badge-danger">{{ allergy }}</span>
+            } @empty {
+              <span class="badge-empty">None Reported</span>
+            }
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <div class="detail-label-container" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span class="detail-label" style="margin-bottom: 0;">Medical Conditions</span>
+            <button mat-icon-button (click)="openMoreInfoDialog(true)" class="inline-add-btn" aria-label="Add medical condition" style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.04);">
+              <mat-icon style="font-size: 16px; width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center;">add</mat-icon>
+            </button>
+          </div>
+          <div class="badge-list">
+            @for (condition of patient()?.medicalConditions; track condition) {
+              <span class="badge badge-danger">{{ condition }}</span>
+            } @empty {
+              <span class="badge-empty">None Reported</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabbed Section -->
+    <div class="details-tab-section">
+      <mat-tab-group class="custom-tabs" animationDuration="150ms" (selectedIndexChange)="onTabChanged($event)">
+        <mat-tab label="Complains">
+          <div class="tab-content">
+            <app-complains #complainsTab [patientId]="patient()?.id" />
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Suggestions">
+          <div class="tab-content">
+            <app-suggestions #suggestionsTab [patientId]="patient()?.id" />
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Treatments">
+          <div class="tab-content">
+            <app-treatments #treatmentsTab [patientId]="patient()?.id" />
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Prescriptions">
+          <div class="tab-content">
+            <app-prescriptions #prescriptionsTab [patientId]="patient()?.id" />
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Payments">
+          <div class="tab-content">
+            <app-payments #paymentsTab [patientId]="patient()?.id" />
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  }
+</div>

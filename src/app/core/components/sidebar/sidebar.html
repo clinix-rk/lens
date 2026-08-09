@@ -1,0 +1,38 @@
+<div class="sidebar-wrapper" [class.collapsed]="collapsed()">
+  <!-- Part 1: Logo -->
+  <div class="sidebar-logo">
+    <div class="logo-brand">
+      @if (!collapsed()) {
+        <span class="logo-text">Clinix</span>
+      } @else {
+        <span class="logo-text-collapsed">C+</span>
+      }
+    </div>
+    <button mat-icon-button (click)="onToggleCollapse()" class="collapse-toggle-btn" aria-label="Toggle Sidebar">
+      <mat-icon>{{ collapsed() ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+    </button>
+  </div>
+
+  <!-- Part 2: Navigation -->
+  <nav class="sidebar-navigation">
+    @for (menu of menus(); track menu.name) {
+      <a [routerLink]="menu.url"
+         routerLinkActive="active-link"
+         class="nav-item"
+         [matTooltip]="menu.name"
+         [matTooltipDisabled]="!collapsed()"
+         matTooltipPosition="right">
+        <div class="active-indicator"></div>
+        <mat-icon class="nav-icon">{{ menu.icon }}</mat-icon>
+        @if (!collapsed()) {
+          <span class="nav-label">{{ menu.name }}</span>
+        }
+      </a>
+    }
+  </nav>
+
+  <!-- Part 3: Personal -->
+  <div class="sidebar-personal">
+    <!-- Empty for this version -->
+  </div>
+</div>

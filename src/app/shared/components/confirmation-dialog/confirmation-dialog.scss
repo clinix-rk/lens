@@ -1,0 +1,99 @@
+@use "sass:color";
+
+.confirmation-dialog-container {
+  padding: 24px;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    
+    .header-icon-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background-color: var(--mat-sys-secondary-container);
+      color: var(--mat-sys-secondary);
+      
+      .header-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+
+    .dialog-title {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--mat-sys-on-background);
+    }
+  }
+
+  .dialog-content {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 0;
+    
+    button {
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      border-radius: 10px;
+      padding: 8px 16px;
+      height: 40px;
+    }
+
+    .cancel-btn {
+      color: var(--mat-sys-on-surface-variant);
+      background: transparent;
+      border: 1px solid var(--mat-sys-outline-variant);
+      
+      &:hover {
+        background-color: var(--mat-sys-surface-container);
+      }
+    }
+
+    .confirm-btn {
+      background-color: var(--mat-sys-secondary);
+      color: var(--mat-sys-on-secondary);
+      
+      &:hover {
+        background-color: color.adjust(#d29f22, $lightness: -5%);
+      }
+    }
+  }
+
+  // Danger/Delete variant styling
+  &.danger-theme {
+    .dialog-header {
+      .header-icon-wrapper {
+        background-color: var(--mat-sys-tertiary-container);
+        color: var(--mat-sys-tertiary);
+      }
+    }
+
+    .confirm-btn {
+      background-color: var(--mat-sys-tertiary);
+      color: var(--mat-sys-on-tertiary);
+      
+      &:hover {
+        background-color: color.adjust(#5d0018, $lightness: -5%);
+      }
+    }
+  }
+}

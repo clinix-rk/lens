@@ -1,0 +1,60 @@
+<h2 mat-dialog-title class="dialog-title">
+  {{ isEditMode ? 'Edit Treatment' : 'Add Treatment' }}
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="treatmentForm" (ngSubmit)="onSubmit()" class="form-grid">
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Date</mat-label>
+      <input matInput [matDatepicker]="datePicker" formControlName="date" [max]="maxDate" />
+      <mat-datepicker-toggle matSuffix [for]="datePicker">
+        <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
+      </mat-datepicker-toggle>
+      <mat-datepicker #datePicker />
+      @if (treatmentForm.get('date')?.hasError('required')) {
+        <mat-error>Date is required</mat-error>
+      }
+    </mat-form-field>
+
+    @if (SHOW_TYPE_FIELD && isEditMode) {
+      <div class="full-width">
+        <app-hierarchical-type-picker
+          formControlName="type"
+          label="Treatment Type"
+          placeholder="Search or pick a treatment type..."
+          [tree]="treatmentTypes"
+        />
+        @if (treatmentForm.get('type')?.touched && treatmentForm.get('type')?.hasError('required')) {
+          <div class="picker-error-msg">Treatment Type is required</div>
+        }
+      </div>
+    }
+
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Details</mat-label>
+      <textarea
+        matInput
+        formControlName="details"
+        rows="4"
+        placeholder="Enter treatment or exam findings..."
+      ></textarea>
+      @if (treatmentForm.get('details')?.hasError('required')) {
+        <mat-error>Details are required</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions class="dialog-actions">
+  <button mat-button (click)="onCancel()" type="button" class="cancel-btn">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    [disabled]="treatmentForm.invalid"
+    (click)="onSubmit()"
+    type="submit"
+    class="submit-btn"
+  >
+    {{ isEditMode ? 'Save Changes' : 'Add' }}
+  </button>
+</mat-dialog-actions>

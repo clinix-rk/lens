@@ -1,0 +1,121 @@
+<div class="doctor-detail-container">
+  @if (isLoading()) {
+    <div class="loading-state">
+      <span class="body-large text-secondary">Loading doctor profile...</span>
+    </div>
+  } @else if (errorMsg()) {
+    <div class="error-state">
+      <mat-icon class="error-icon">error_outline</mat-icon>
+      <h2 class="title-medium">{{ errorMsg() }}</h2>
+      <button mat-button routerLink="/doctors">Back to Doctors</button>
+    </div>
+  } @else {
+    <!-- Header Row -->
+    <div class="header-row">
+      <div class="header-left">
+        <button mat-icon-button routerLink="/doctors" class="back-btn" aria-label="Go back to Doctors list">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <h1 class="title-large Montserrat-font">Doctor Profile</h1>
+      </div>
+      <div class="header-actions">
+        <button mat-raised-button class="action-btn edit-btn hover-lift" (click)="openEditDoctorDialog()">
+          <mat-icon class="btn-icon">edit</mat-icon>
+          Update Profile
+        </button>
+      </div>
+    </div>
+
+    <!-- Full Page Dashboard Layout -->
+    <div class="profile-layout-grid">
+      <!-- Left Card: Doctor Identity -->
+      <div class="profile-card identity-card hover-lift">
+        <div class="avatar-wrapper">
+          <div class="avatar-gradient">
+            <mat-icon class="avatar-icon">medical_services</mat-icon>
+          </div>
+          <span class="prefix-badge">{{ doctor()?.caseNoPrefix }}</span>
+        </div>
+        
+        <div class="identity-info">
+          <h2 class="doctor-name Montserrat-font">{{ doctor()?.name }}</h2>
+          <span class="role-sub text-secondary">Medical Professional</span>
+        </div>
+
+        <div class="info-badges">
+          <div class="badge-item">
+            <span class="badge-label">Active Prefix</span>
+            <span class="badge-value">{{ doctor()?.caseNoPrefix }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Card: System Info / Details -->
+      <div class="profile-card system-info-card hover-lift">
+        <div class="card-header">
+          <mat-icon class="header-icon">info</mat-icon>
+          <h3 class="Montserrat-font">Patient Case Number Assignment</h3>
+        </div>
+        
+        <div class="card-body">
+          <p class="body-medium">
+            This doctor is registered with the system case prefix <strong class="text-primary">{{ doctor()?.caseNoPrefix }}</strong>. 
+          </p>
+          <p class="body-medium text-secondary">
+            Any new patients assigned to this doctor will have their case numbers automatically generated using this prefix (for example, 
+            <strong>{{ doctor()?.caseNoPrefix }}101</strong>, <strong>{{ doctor()?.caseNoPrefix }}102</strong>).
+          </p>
+          <div class="prefix-example-box">
+            <span class="box-label">Example Case Format</span>
+            <span class="box-value Montserrat-font">{{ doctor()?.caseNoPrefix }}XXXX</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metrics Panel (Designed, but kept disabled/hidden by flag) -->
+    @if (showMetrics()) {
+      <div class="metrics-section">
+        <h3 class="section-title Montserrat-font">Key Metrics</h3>
+        
+        <div class="metrics-grid">
+          <!-- Total Patients -->
+          <div class="metric-card disabled-card">
+            <div class="metric-icon-wrapper">
+              <mat-icon>people</mat-icon>
+            </div>
+            <div class="metric-info">
+              <span class="metric-label">Total Patients</span>
+              <span class="metric-value">{{ doctor()?.totalPatients ?? '-' }}</span>
+              <span class="coming-soon-badge">Coming Soon</span>
+            </div>
+          </div>
+
+          <!-- Number of Charts -->
+          <div class="metric-card disabled-card">
+            <div class="metric-icon-wrapper">
+              <mat-icon>folder_shared</mat-icon>
+            </div>
+            <div class="metric-info">
+              <span class="metric-label">Patient Charts</span>
+              <span class="metric-value">-</span>
+              <span class="coming-soon-badge">Coming Soon</span>
+            </div>
+          </div>
+
+          <!-- Upcoming Appointments -->
+          <div class="metric-card disabled-card">
+            <div class="metric-icon-wrapper">
+              <mat-icon>calendar_month</mat-icon>
+            </div>
+            <div class="metric-info">
+              <span class="metric-label">Upcoming Appointments</span>
+              <span class="metric-value">Coming Soon</span>
+              <span class="coming-soon-badge">WIP Feature</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

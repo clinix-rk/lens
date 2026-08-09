@@ -1,0 +1,154 @@
+<h2 mat-dialog-title class="dialog-title Montserrat-font">Add New Patient</h2>
+
+<form [formGroup]="patientForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content class="dialog-content">
+    <div class="form-grid">
+      <!-- Name -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Full Name</mat-label>
+        <input matInput formControlName="name" placeholder="John Doe" required />
+        @if (patientForm.get('name')?.touched && patientForm.get('name')?.hasError('required')) {
+          <mat-error>Name is required</mat-error>
+        }
+        @if (patientForm.get('name')?.hasError('maxlength')) {
+          <mat-error>Max 50 characters</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Associated Doctor Selection -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Associated Doctor</mat-label>
+        <mat-select formControlName="doctorId" required>
+          @for (doctor of doctors(); track doctor.id) {
+            <mat-option [value]="doctor.id">{{ doctor.name }}</mat-option>
+          }
+        </mat-select>
+        @if (
+          patientForm.get('doctorId')?.touched && patientForm.get('doctorId')?.hasError('required')
+        ) {
+          <mat-error>Doctor selection is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Date of Birth -->
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Date of Birth</mat-label>
+        <input
+          matInput
+          [matDatepicker]="dobPicker"
+          formControlName="dateOfBirth"
+          [max]="maxDate"
+          required
+        />
+        <mat-datepicker-toggle matSuffix [for]="dobPicker">
+          <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
+        </mat-datepicker-toggle>
+        <mat-datepicker #dobPicker />
+        @if (patientForm.get('dateOfBirth')?.touched && patientForm.get('dateOfBirth')?.invalid) {
+          <mat-error>Date of birth is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Gender -->
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Gender</mat-label>
+        <mat-select formControlName="gender" required>
+          <mat-option value="MALE">Male</mat-option>
+          <mat-option value="FEMALE">Female</mat-option>
+          <mat-option value="OTHER">Other</mat-option>
+        </mat-select>
+        @if (patientForm.get('gender')?.touched && patientForm.get('gender')?.invalid) {
+          <mat-error>Gender is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Primary Phone -->
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Primary Phone</mat-label>
+        <input matInput formControlName="primaryPhone" placeholder="+1234567890" required />
+        @if (patientForm.get('primaryPhone')?.touched && patientForm.get('primaryPhone')?.invalid) {
+          <mat-error>Valid phone number required (+1234567890)</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Secondary Phone -->
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Secondary Phone (Optional)</mat-label>
+        <input matInput formControlName="secondaryPhone" placeholder="+1234567890" />
+        @if (patientForm.get('secondaryPhone')?.invalid) {
+          <mat-error>Valid phone number format required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Email -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email (Optional)</mat-label>
+        <input matInput type="email" formControlName="email" placeholder="john.doe@example.com" />
+        @if (patientForm.get('email')?.invalid) {
+          <mat-error>Invalid email format</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Address -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Address (Optional)</mat-label>
+        <textarea matInput formControlName="address" placeholder="123 Main St" rows="2"></textarea>
+      </mat-form-field>
+
+      <!-- City -->
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>City (Optional)</mat-label>
+        <input matInput formControlName="city" placeholder="Metropolis" />
+      </mat-form-field>
+
+      <!-- Pincode -->
+      <mat-form-field appearance="outline" class="half-width">
+        <mat-label>Pincode (Optional)</mat-label>
+        <input matInput formControlName="pincode" placeholder="123456" />
+        @if (patientForm.get('pincode')?.invalid) {
+          <mat-error>Alphanumeric characters only</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Referred By -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Referred By (Optional)</mat-label>
+        <input matInput formControlName="referredBy" placeholder="Dr. Smith" />
+      </mat-form-field>
+
+      <!-- Medical Conditions -->
+      <app-multi-select-with-add
+        formControlName="medicalConditions"
+        label="Medical Conditions"
+        placeholder="Select conditions"
+        addPlaceholder="Add custom condition..."
+        [options]="availableConditions()"
+        (optionAdded)="onConditionAdded($event)"
+        class="full-width"
+      />
+
+      <!-- Drug Allergies -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Drug Allergies</mat-label>
+        <input
+          matInput
+          formControlName="drugAllergies"
+          [matAutocomplete]="allergiesAuto"
+          placeholder="Type or select from suggestions..."
+        />
+        <mat-autocomplete #allergiesAuto="matAutocomplete">
+          @for (allergy of getFilteredAllergies(patientForm.get('drugAllergies')?.value); track allergy) {
+            <mat-option [value]="allergy">
+              {{ allergy }}
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-actions">
+    <button mat-button type="button" (click)="onCancel()" class="btn-cancel">Cancel</button>
+    <button mat-raised-button color="primary" type="submit" class="btn-submit">Add Patient</button>
+  </mat-dialog-actions>
+</form>

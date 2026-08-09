@@ -1,0 +1,60 @@
+.dialog-title {
+  color: var(--mat-sys-primary);
+  font-weight: 700;
+  margin-bottom: 16px;
+  font-size: 24px;
+}
+
+.dialog-content {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding-top: 8px !important;
+
+  .form-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    .full-width {
+      flex: 1 1 100%;
+    }
+
+    .half-width {
+      flex: 1 1 calc(50% - 8px);
+      min-width: 200px;
+    }
+
+    mat-form-field {
+      width: 100%;
+    }
+  }
+}
+
+.dialog-actions {
+  padding: 16px 24px !important;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  margin-top: 16px;
+
+  .btn-cancel {
+    color: var(--mat-sys-on-surface-variant);
+    
+    &:hover {
+      background-color: var(--mat-sys-outline-variant);
+    }
+  }
+
+  .btn-submit {
+    background-color: var(--mat-sys-secondary);
+    color: var(--mat-sys-on-secondary);
+    border-radius: var(--mat-sys-corner-large, 20px) !important;
+    padding: 0 20px;
+    
+    &:hover {
+      background-color: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+    }
+  }
+}

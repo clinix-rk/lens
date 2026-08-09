@@ -1,0 +1,174 @@
+.dialog-title {
+  color: var(--mat-sys-primary);
+  font-weight: 700;
+  margin-bottom: 20px;
+  font-size: 24px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  padding-bottom: 16px;
+
+  .case-no-text {
+    color: var(--mat-sys-secondary);
+  }
+}
+
+.dialog-content {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding-top: 8px !important;
+  box-sizing: border-box;
+
+  // View Mode Layout
+  &.view-mode {
+    .info-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+
+      .info-cell {
+        flex: 1 1 calc(50% - 10px);
+        min-width: 200px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+
+        &.full-width {
+          flex: 1 1 100%;
+        }
+
+        .info-label {
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: var(--mat-sys-on-surface-variant);
+          font-weight: 600;
+        }
+
+        .info-value {
+          font-size: 15px;
+          color: var(--mat-sys-on-surface);
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+
+          &.text-highlight {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--mat-sys-primary);
+          }
+
+          .inline-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+            color: var(--mat-sys-on-surface-variant);
+          }
+        }
+
+        &.clinical-info {
+          background-color: var(--mat-sys-surface-container-low);
+          padding: 16px;
+          border-radius: 12px;
+          border: 1px solid var(--mat-sys-outline-variant);
+
+          .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+
+            .badge {
+              padding: 4px 12px;
+              border-radius: 12px;
+              font-size: 12px;
+              font-weight: 600;
+
+              &.badge-danger {
+                background-color: var(--mat-sys-tertiary-container);
+                color: var(--mat-sys-on-tertiary-container);
+                border: 1px solid rgba(93, 0, 24, 0.1);
+              }
+            }
+          }
+
+          .badge-empty {
+            font-size: 13px;
+            color: var(--mat-sys-on-surface-variant);
+            font-style: italic;
+          }
+        }
+      }
+    }
+  }
+
+  // Edit Mode Layout
+  &.edit-mode {
+    .form-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+
+      .full-width {
+        flex: 1 1 100%;
+      }
+
+      .half-width {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 200px;
+      }
+
+      mat-form-field {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.dialog-actions {
+  padding: 16px 24px !important;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  margin-top: 16px;
+
+  .btn-cancel {
+    color: var(--mat-sys-on-surface-variant);
+    font-weight: 600;
+    
+    &:hover {
+      background-color: var(--mat-sys-outline-variant);
+    }
+  }
+
+  .btn-submit {
+    background-color: var(--mat-sys-secondary);
+    color: var(--mat-sys-on-secondary);
+    border-radius: var(--mat-sys-corner-large, 20px) !important;
+    padding: 0 20px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    cursor: pointer;
+
+    .btn-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+    
+    &:hover:not(:disabled) {
+      background-color: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+    }
+
+    &:disabled {
+      background-color: var(--mat-sys-outline-variant);
+      color: var(--mat-sys-on-surface-variant);
+      cursor: not-allowed;
+    }
+  }
+}
+

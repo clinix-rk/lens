@@ -1,0 +1,19 @@
+<header class="topbar-wrapper">
+  <div class="left-section">
+    <button mat-icon-button (click)="onToggleCollapse()" class="menu-btn" aria-label="Toggle Navigation Sidebar">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <h2 class="page-title title-large">{{ pageTitle() }}</h2>
+  </div>
+
+  <div class="right-section">
+    <!-- Notification indicator badge -->
+    <button mat-icon-button class="header-action-btn" aria-label="View Notifications">
+      <span class="notification-badge"></span>
+      <mat-icon>notifications</mat-icon>
+    </button>
+    <button mat-icon-button class="header-action-btn" aria-label="Help Center">
+      <mat-icon>help</mat-icon>
+    </button>
+  </div>
+</header>

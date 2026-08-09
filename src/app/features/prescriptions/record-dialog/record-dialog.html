@@ -1,0 +1,142 @@
+<h2 mat-dialog-title class="dialog-title">
+  {{ isEditMode() ? 'Edit Prescription' : 'Add Prescription' }}
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <div class="form-grid">
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Date</mat-label>
+      <input
+        matInput
+        type="date"
+        [value]="prescriptionDate() | date:'yyyy-MM-dd'"
+        (change)="prescriptionDate.set($any($event.target).valueAsDate)"
+        [max]="maxDate() | date:'yyyy-MM-dd'"
+      />
+      @if (!prescriptionDate()) {
+        <mat-error>Date is required</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="medicines-section">
+      <h3 class="section-title">Medicines</h3>
+
+      <div class="medicines-list">
+        @for (medRow of medicines(); track $index; let i = $index) {
+          <div class="medicine-row">
+            <div class="row-header">
+              <span class="row-number">#{{ i + 1 }}</span>
+              @if (medicines().length > 1) {
+                <button
+                  type="button"
+                  mat-icon-button
+                  color="warn"
+                  class="remove-btn"
+                  (click)="removeMedicineRow(i)"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+              }
+            </div>
+
+            <div class="fields-grid">
+              <mat-form-field class="field-name" appearance="outline">
+                <mat-label>Medicine Name</mat-label>
+                <input
+                  matInput
+                  [value]="medRow.name"
+                  (input)="updateMedicineField(i, 'name', $any($event.target).value)"
+                  [matAutocomplete]="auto"
+                />
+                <mat-autocomplete #auto="matAutocomplete" (optionSelected)="updateMedicineField(i, 'name', $event.option.value)">
+                  @for (name of getFilteredMedicines(i); track name) {
+                    <mat-option [value]="name">
+                      {{ name }}
+                    </mat-option>
+                  }
+                </mat-autocomplete>
+                @if (!medRow.name) {
+                  <mat-error>Name is required</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field class="field-instructions" appearance="outline">
+                <mat-label>Instructions</mat-label>
+                <input
+                  matInput
+                  [value]="medRow.instructions"
+                  (input)="updateMedicineField(i, 'instructions', $any($event.target).value)"
+                  [matAutocomplete]="instructionsAuto"
+                  placeholder="Type or select from suggestions..."
+                />
+                <mat-autocomplete #instructionsAuto="matAutocomplete" (optionSelected)="updateMedicineField(i, 'instructions', $event.option.value)">
+                  @for (inst of getFilteredInstructions(i); track inst) {
+                    <mat-option [value]="inst">
+                      {{ inst }}
+                    </mat-option>
+                  }
+                </mat-autocomplete>
+              </mat-form-field>
+
+              <mat-form-field class="field-dosage" appearance="outline">
+                <mat-label>Dosage</mat-label>
+                <mat-select
+                  [value]="medRow.dosage"
+                  (selectionChange)="updateMedicineField(i, 'dosage', $event.value)"
+                >
+                  @for (dose of globalDosages(); track dose) {
+                    <mat-option [value]="dose">{{ dose }}</mat-option>
+                  }
+                </mat-select>
+                @if (!medRow.dosage) {
+                  <mat-error>Dosage is required</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field class="field-quantity" appearance="outline">
+                <mat-label>Quantity</mat-label>
+                <input
+                  matInput
+                  type="number"
+                  [value]="medRow.quantity"
+                  (input)="updateMedicineField(i, 'quantity', +$any($event.target).value)"
+                  min="1"
+                  step="1"
+                />
+                @if (medRow.quantity === undefined || medRow.quantity === null) {
+                  <mat-error>Quantity is required</mat-error>
+                } @else if (medRow.quantity < 1) {
+                  <mat-error>Quantity must be at least 1</mat-error>
+                }
+              </mat-form-field>
+            </div>
+          </div>
+        }
+      </div>
+
+      <button
+        type="button"
+        mat-stroked-button
+        color="accent"
+        class="add-row-btn"
+        (click)="addMedicineRow()"
+      >
+        <mat-icon>add</mat-icon> Add Medicine
+      </button>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions class="dialog-actions">
+  <button mat-button (click)="onCancel()" type="button" class="cancel-btn">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    [disabled]="!isFormValid()"
+    (click)="onSubmit()"
+    type="submit"
+    class="submit-btn"
+  >
+    {{ isEditMode() ? 'Save Changes' : 'Add' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,41 @@
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--mat-sys-background);
+  overflow: hidden;
+  position: relative;
+}
+
+.main-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.content-viewport {
+  flex: 1;
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  background-color: var(--mat-sys-background);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  
+  // Ensure smooth transitions when colors change
+  transition: background-color 0.3s ease;
+}
+
+.content-card {
+  flex: 1;
+  background-color: var(--mat-sys-surface);
+  border-radius: var(--mat-sys-corner-extra-large, 28px);
+  border: 1px solid var(--mat-sys-outline-variant);
+  box-shadow: 0 6px 32px rgba(0, 0, 0, 0.015);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}

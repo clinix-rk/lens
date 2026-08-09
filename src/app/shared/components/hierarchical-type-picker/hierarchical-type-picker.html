@@ -1,0 +1,53 @@
+<div class="picker-container" [class.disabled]="disabled" [class.open]="isOpen">
+  <label class="picker-label">{{ label() }}</label>
+
+  <div class="picker-trigger" (click)="toggleDropdown()">
+    <span class="picker-value" [class.placeholder]="!selectedValue">
+      {{ selectedValue || placeholder() }}
+    </span>
+    <mat-icon class="picker-arrow">arrow_drop_down</mat-icon>
+  </div>
+
+  @if (isOpen) {
+    <div class="picker-dropdown">
+      <ul class="node-list">
+        <ng-container
+          *ngTemplateOutlet="nodeListTemplate; context: { $implicit: tree(), depth: 0 }"
+        />
+      </ul>
+    </div>
+  }
+</div>
+
+<ng-template #nodeListTemplate let-nodes let-depth="depth">
+  @for (node of nodes; track node.label) {
+    <li class="node-item" [style.padding-left.px]="depth * 16">
+      <div class="node-row" [class.selected]="selectedValue === node.label">
+        @if (hasChildren(node)) {
+          <button type="button" class="expand-btn" (click)="toggleExpand(node, $event)">
+            <mat-icon class="expand-icon" [class.expanded]="isExpanded(node)">
+              chevron_right
+            </mat-icon>
+          </button>
+        } @else {
+          <span class="expand-placeholder"></span>
+        }
+
+        <span class="node-label" (click)="selectNode(node, $event)">
+          {{ node.label }}
+        </span>
+      </div>
+
+      @if (hasChildren(node) && isExpanded(node)) {
+        <ul class="node-list child-list">
+          <ng-container
+            *ngTemplateOutlet="
+              nodeListTemplate;
+              context: { $implicit: node.children, depth: depth + 1 }
+            "
+          />
+        </ul>
+      }
+    </li>
+  }
+</ng-template>

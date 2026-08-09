@@ -1,0 +1,130 @@
+@use "sass:color";
+
+.pdf-viewer-container {
+  display: flex;
+  flex-direction: column;
+  height: 90vh;
+  max-height: 800px;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+
+  .viewer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+    .title-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .header-icon {
+        color: var(--mat-sys-tertiary);
+        font-size: 28px;
+        width: 28px;
+        height: 28px;
+      }
+
+      .viewer-title {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: var(--mat-sys-on-background);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 400px;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      button {
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        border-radius: 8px;
+        padding: 8px 16px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .remove-btn {
+        background-color: var(--mat-sys-tertiary);
+        color: var(--mat-sys-on-tertiary);
+        border: none;
+        cursor: pointer;
+        &:hover {
+          background-color: color.adjust(#5d0018, $lightness: -5%);
+        }
+      }
+
+      .download-btn {
+        background-color: var(--mat-sys-secondary);
+        color: var(--mat-sys-on-secondary);
+        border: none;
+        cursor: pointer;
+        &:hover {
+          background-color: color.adjust(#d29f22, $lightness: -5%);
+        }
+      }
+
+      .close-btn {
+        color: var(--mat-sys-on-surface-variant);
+        width: 40px;
+        height: 40px;
+        padding: 0;
+      }
+    }
+  }
+
+  .viewer-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    overflow: hidden;
+    position: relative;
+    background-color: var(--mat-sys-background);
+
+    .loading-wrapper, .error-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      height: 100%;
+      min-height: 400px;
+    }
+
+    .error-wrapper {
+      .error-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: var(--mat-sys-tertiary);
+      }
+      .error-text {
+        color: var(--mat-sys-tertiary);
+      }
+    }
+
+    .iframe-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+
+      .pdf-frame {
+        width: 100%;
+        height: 100%;
+        border: none;
+      }
+    }
+  }
+}

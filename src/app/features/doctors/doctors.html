@@ -1,0 +1,114 @@
+<div class="doctors-page-container">
+  <div class="header-section">
+    <h1 class="title-large Montserrat-font">Doctors</h1>
+  </div>
+
+  <!-- Actions Row: Search Bar (left) and Add Button (right) -->
+  <div class="actions-row">
+    <div class="search-wrapper">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search Doctors</mat-label>
+        <mat-icon matPrefix class="search-icon">search</mat-icon>
+        <input matInput 
+               type="text" 
+               placeholder="Search by name..." 
+               [ngModel]="searchQuery()"
+               (ngModelChange)="onSearchChange($event)">
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button color="primary" class="add-btn hover-lift" (click)="openAddDoctorDialog()">
+      <mat-icon>add</mat-icon>
+      Add
+    </button>
+  </div>
+
+  <!-- Doctors Table (List of card components displaying row by row) -->
+  <div class="doctors-table-container">
+    <div class="doctors-table-header">
+      <div class="col-case">Case Prefix</div>
+      <div class="col-name">Name</div>
+      <div class="col-actions"></div>
+    </div>
+
+    <div class="doctors-table-body">
+      @if (isLoading()) {
+        <div class="table-loading">
+          <span class="body-medium text-secondary">Retrieving records...</span>
+        </div>
+      } @else {
+        @for (doctor of doctors(); track doctor.id) {
+          <div class="doctor-card-row hover-lift" (click)="viewDoctorDetails(doctor.id)">
+            <div class="col-case">
+              <span class="case-badge">{{ doctor.caseNoPrefix }}</span>
+            </div>
+            <div class="col-name">
+              <span class="doctor-name Montserrat-font">{{ doctor.name }}</span>
+            </div>
+            <div class="col-actions">
+              <button mat-icon-button class="details-arrow" aria-label="Go to Doctor Page">
+                <mat-icon>chevron_right</mat-icon>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="table-empty">
+            <mat-icon class="empty-icon">search_off</mat-icon>
+            <h3 class="title-medium">No doctors found</h3>
+            <p class="body-medium text-secondary">Try updating your search term or add a new doctor.</p>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination-bar">
+    <div class="left-controls">
+      <span class="body-medium text-secondary">Items per page:</span>
+      <select class="page-size-select" [value]="pageSize()" (change)="onPageSizeChange($event)">
+        @for (size of pageSizes; track size) {
+          <option [value]="size">{{ size }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="middle-controls">
+      <span class="body-medium text-secondary">
+        Showing {{ showingStart }} - {{ showingEnd }} of {{ totalElements() }} doctors
+      </span>
+    </div>
+
+    <div class="right-controls">
+      <button mat-icon-button 
+              (click)="goToFirstPage()" 
+              [disabled]="currentPage() === 1 || isLoading()" 
+              aria-label="First page">
+        <mat-icon>first_page</mat-icon>
+      </button>
+      <button mat-icon-button 
+              (click)="goToPreviousPage()" 
+              [disabled]="currentPage() === 1 || isLoading()" 
+              aria-label="Previous page">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      
+      <span class="page-number-display body-medium Montserrat-font">
+        Page {{ currentPage() }} of {{ totalPages() }}
+      </span>
+
+      <button mat-icon-button 
+              (click)="goToNextPage()" 
+              [disabled]="currentPage() === totalPages() || isLoading()" 
+              aria-label="Next page">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      <button mat-icon-button 
+              (click)="goToLastPage()" 
+              [disabled]="currentPage() === totalPages() || isLoading()" 
+              aria-label="Last page">
+        <mat-icon>last_page</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

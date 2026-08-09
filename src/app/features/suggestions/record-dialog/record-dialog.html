@@ -1,0 +1,88 @@
+<h2 mat-dialog-title class="dialog-title">
+  {{ isEditMode ? 'Edit Suggestion' : 'Add Suggestion' }}
+</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="suggestionForm" (ngSubmit)="onSubmit()" class="form-grid">
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Date</mat-label>
+      <input matInput [matDatepicker]="datePicker" formControlName="date" [max]="maxDate" />
+      <mat-datepicker-toggle matSuffix [for]="datePicker">
+        <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
+      </mat-datepicker-toggle>
+      <mat-datepicker #datePicker />
+      @if (suggestionForm.get('date')?.hasError('required')) {
+        <mat-error>Date is required</mat-error>
+      }
+    </mat-form-field>
+
+    @if(SHOW_TYPE_FIELD) {
+      <div class="full-width">
+        <app-hierarchical-type-picker
+          formControlName="type"
+          label="Suggestion Type"
+          placeholder="Search or pick a suggestion type..."
+          [tree]="suggestionTypes"
+        />
+        @if (
+          suggestionForm.get('type')?.touched && suggestionForm.get('type')?.hasError('required')
+        ) {
+          <div class="picker-error-msg">Suggestion Type is required</div>
+        }
+      </div>
+    }
+
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Details</mat-label>
+      <textarea
+        matInput
+        formControlName="details"
+        rows="4"
+        placeholder="Enter recommendation details..."
+      ></textarea>
+      @if (suggestionForm.get('details')?.hasError('required')) {
+        <mat-error>Details are required</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="flex-row">
+      <mat-form-field class="half-width" appearance="outline">
+        <mat-label>Estimated Cost</mat-label>
+        <span matTextPrefix class="currency-prefix">₹&nbsp;</span>
+        <input matInput type="number" formControlName="cost" min="0" placeholder="0" />
+        @if (suggestionForm.get('cost')?.hasError('required')) {
+          <mat-error>Cost is required</mat-error>
+        }
+        @if (suggestionForm.get('cost')?.hasError('min')) {
+          <mat-error>Cost cannot be negative</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="half-width" appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select formControlName="status">
+          @for (s of statuses; track s) {
+            <mat-option [value]="s">{{ s }}</mat-option>
+          }
+        </mat-select>
+        @if (suggestionForm.get('status')?.hasError('required')) {
+          <mat-error>Status is required</mat-error>
+        }
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions class="dialog-actions">
+  <button mat-button (click)="onCancel()" type="button" class="cancel-btn">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    [disabled]="suggestionForm.invalid"
+    (click)="onSubmit()"
+    type="submit"
+    class="submit-btn"
+  >
+    {{ isEditMode ? 'Save Changes' : 'Add' }}
+  </button>
+</mat-dialog-actions>

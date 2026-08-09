@@ -1,0 +1,86 @@
+<div class="search-container">
+  <!-- Search Pill Container -->
+  <div class="search-box-wrapper">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search Clinix Database</mat-label>
+      <mat-icon matPrefix class="search-icon">search</mat-icon>
+      <input matInput 
+             type="text" 
+             placeholder="Search by name, ID, specialty, or date..." 
+             [(ngModel)]="searchQuery"
+             (ngModelChange)="onSearch()">
+    </mat-form-field>
+  </div>
+
+  <!-- Category Filter Chips -->
+  <div class="filter-chips-wrapper">
+    <mat-chip-set aria-label="Search Filter Categories">
+      <mat-chip 
+        class="expressive-chip"
+        [class.chip-selected]="selectedFilter() === 'all'" 
+        (click)="setFilter('all')">
+        <mat-icon class="chip-icon">apps</mat-icon>
+        All Results
+      </mat-chip>
+      <mat-chip 
+        class="expressive-chip"
+        [class.chip-selected]="selectedFilter() === 'patients'" 
+        (click)="setFilter('patients')">
+        <mat-icon class="chip-icon">person</mat-icon>
+        Patients
+      </mat-chip>
+      <mat-chip 
+        class="expressive-chip"
+        [class.chip-selected]="selectedFilter() === 'doctors'" 
+        (click)="setFilter('doctors')">
+        <mat-icon class="chip-icon">medical_services</mat-icon>
+        Doctors
+      </mat-chip>
+      <mat-chip 
+        class="expressive-chip"
+        [class.chip-selected]="selectedFilter() === 'appointments'" 
+        (click)="setFilter('appointments')">
+        <mat-icon class="chip-icon">calendar_month</mat-icon>
+        Appointments
+      </mat-chip>
+    </mat-chip-set>
+  </div>
+
+  <!-- Search Results Count -->
+  <div class="results-meta">
+    <span class="body-medium strong-text">{{ filteredResults().length }} results found</span>
+  </div>
+
+  <!-- Search Results List -->
+  <div class="results-list">
+    @for (result of filteredResults(); track result.title) {
+      <div class="result-card hover-lift">
+        <div class="result-avatar" [ngClass]="result.colorClass">
+          {{ result.avatarText }}
+        </div>
+        <div class="result-info">
+          <div class="result-title-row">
+            <h3 class="title-medium">{{ result.title }}</h3>
+            <span class="type-tag" [ngClass]="result.type">
+              {{ result.type | titlecase }}
+            </span>
+          </div>
+          <p class="body-medium text-secondary">{{ result.subtitle }}</p>
+          <div class="result-footer">
+            <mat-icon class="footer-icon">info</mat-icon>
+            <span class="body-small text-tertiary">{{ result.meta }}</span>
+          </div>
+        </div>
+        <button mat-icon-button class="action-btn">
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+    } @empty {
+      <div class="empty-state card-outline">
+        <mat-icon class="empty-icon">search_off</mat-icon>
+        <h3 class="title-medium">No matches found</h3>
+        <p class="body-medium text-secondary">Try adjusting your keywords or selecting a different category filter.</p>
+      </div>
+    }
+  </div>
+</div>

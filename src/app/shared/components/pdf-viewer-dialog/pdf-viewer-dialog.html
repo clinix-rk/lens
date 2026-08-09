@@ -1,0 +1,45 @@
+<div class="pdf-viewer-container">
+  <div class="viewer-header">
+    <div class="title-section">
+      <mat-icon class="header-icon">picture_as_pdf</mat-icon>
+      <h2 mat-dialog-title class="viewer-title Montserrat-font">{{ data.filename }}</h2>
+    </div>
+    <div class="header-actions">
+      <!-- Option to remove patient PDF -->
+      @if (data.isPatientPdf && data.fileId) {
+        <button mat-flat-button class="remove-btn hover-lift" (click)="onRemove()" [disabled]="isLoading">
+          <mat-icon>delete</mat-icon>
+          Remove PDF
+        </button>
+      }
+      <!-- Option to download other PDFs -->
+      @if (!data.isPatientPdf) {
+        <button mat-flat-button class="download-btn hover-lift" (click)="onDownload()" [disabled]="isLoading">
+          <mat-icon>download</mat-icon>
+          Download
+        </button>
+      }
+      <button mat-icon-button class="close-btn" (click)="onClose()" aria-label="Close dialog">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div mat-dialog-content class="viewer-content">
+    @if (isLoading) {
+      <div class="loading-wrapper">
+        <mat-spinner diameter="48" />
+        <span class="body-medium text-secondary">Loading PDF document...</span>
+      </div>
+    } @else if (errorMsg) {
+      <div class="error-wrapper">
+        <mat-icon class="error-icon">error_outline</mat-icon>
+        <span class="body-medium error-text">{{ errorMsg }}</span>
+      </div>
+    } @else if (safeUrl) {
+      <div class="iframe-container">
+        <iframe [src]="safeUrl" class="pdf-frame" title="PDF Document Viewer"></iframe>
+      </div>
+    }
+  </div>
+</div>

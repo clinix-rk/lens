@@ -1,0 +1,49 @@
+<h2 mat-dialog-title class="dialog-title Montserrat-font">
+  {{ isEditMode() ? 'Edit Doctor Profile' : 'Add New Doctor' }}
+</h2>
+
+<form [formGroup]="doctorForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content class="dialog-content">
+    <div class="form-grid">
+      <!-- Name -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Doctor Name</mat-label>
+        <input matInput formControlName="name" placeholder="Dr. Jane Smith" required />
+        @if (doctorForm.get('name')?.touched && doctorForm.get('name')?.hasError('required')) {
+          <mat-error> Doctor name is required </mat-error>
+        }
+        @if (doctorForm.get('name')?.hasError('minlength')) {
+          <mat-error> Name must be at least 2 characters </mat-error>
+        }
+        @if (doctorForm.get('name')?.hasError('maxlength')) {
+          <mat-error> Name cannot exceed 100 characters </mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Case Number Prefix -->
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Case Number Prefix</mat-label>
+        <input matInput formControlName="caseNoPrefix" placeholder="e.g. JS" required />
+        @if (
+          doctorForm.get('caseNoPrefix')?.touched &&
+          doctorForm.get('caseNoPrefix')?.hasError('required')
+        ) {
+          <mat-error> Case number prefix is required </mat-error>
+        }
+        @if (doctorForm.get('caseNoPrefix')?.hasError('maxlength')) {
+          <mat-error> Prefix cannot exceed 5 characters </mat-error>
+        }
+        @if (isEditMode()) {
+          <mat-hint>Case prefix cannot be changed once created.</mat-hint>
+        }
+      </mat-form-field>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions class="dialog-actions">
+    <button mat-button type="button" (click)="onCancel()" class="btn-cancel">Cancel</button>
+    <button mat-raised-button color="primary" type="submit" class="btn-submit">
+      {{ isEditMode() ? 'Save Changes' : 'Add Doctor' }}
+    </button>
+  </mat-dialog-actions>
+</form>

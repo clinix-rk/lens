@@ -1,0 +1,210 @@
+<div class="finances-page-container">
+  <div class="header-section">
+    <h1 class="title-large Montserrat-font">Finances</h1>
+    <button mat-raised-button color="primary" class="export-btn hover-lift" (click)="onExportForm3C()">
+      <mat-icon>picture_as_pdf</mat-icon>
+      Export Form 3C
+    </button>
+  </div>
+
+  <!-- Row 2: Filters -->
+  <div class="filters-row">
+    <div class="search-wrapper">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search Transactions</mat-label>
+        <mat-icon matPrefix class="search-icon">search</mat-icon>
+        <input
+          matInput
+          type="text"
+          placeholder="Search by receipt no, patient name, case no..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event); onFilterChange()"
+        />
+      </mat-form-field>
+    </div>
+
+    <div class="filter-controls">
+      <!-- Method Selector -->
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Payment Method</mat-label>
+        <mat-select
+          [ngModel]="selectedMethod()"
+          (ngModelChange)="selectedMethod.set($event); onFilterChange()"
+        >
+          @for (m of methods; track m) {
+            <mat-option [value]="m">{{ m }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Date Range Picker -->
+      <mat-form-field appearance="outline" class="filter-field date-range-field">
+        <mat-label>Date Range</mat-label>
+        <mat-date-range-input [rangePicker]="rangePicker" [max]="today">
+          <input
+            matStartDate
+            placeholder="Start date"
+            [value]="startDate()"
+            (dateChange)="startDate.set($event.value); onFilterChange()"
+          />
+          <input
+            matEndDate
+            placeholder="End date"
+            [value]="endDate()"
+            (dateChange)="endDate.set($event.value); onFilterChange()"
+          />
+        </mat-date-range-input>
+        <mat-datepicker-toggle matSuffix [for]="rangePicker">
+          <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
+        </mat-datepicker-toggle>
+        <mat-date-range-picker #rangePicker />
+      </mat-form-field>
+      <!-- Reset Filters Button -->
+      @if (searchQuery() || selectedMethod() !== 'ALL' || startDate() || endDate()) {
+        <button mat-button color="warn" class="reset-btn" (click)="resetFilters()">
+          <mat-icon>clear</mat-icon>
+          Reset
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Finances Table -->
+  <div class="finances-table-container">
+    <div class="finances-table-header">
+      <div class="col-receipt">Receipt No</div>
+      <div class="col-date">Date</div>
+      <div class="col-amount">Amount</div>
+      <div class="col-method">Method</div>
+      <div class="col-case">Case No</div>
+      <div class="col-name">Patient Name</div>
+      <div class="col-actions">Actions</div>
+    </div>
+
+    <div class="finances-table-body">
+      @if (isLoading()) {
+        <div class="table-loading">
+          <span class="body-medium text-secondary">Retrieving financial records...</span>
+        </div>
+      } @else {
+        @for (payment of payments(); track payment.id) {
+          <div class="finance-card-row hover-lift">
+            <div class="col-receipt">
+              <span class="receipt-badge">#{{ payment.id }}</span>
+            </div>
+            <div class="col-date">
+              <span class="payment-date">{{ payment.date | date: 'dd MMM yyyy' }}</span>
+            </div>
+            <div class="col-amount">
+              <span class="payment-amount Montserrat-font"
+                >₹{{ payment.amount | number: '1.2-2' }}</span
+              >
+            </div>
+            <div class="col-method">
+              <span class="method-badge badge-{{ payment.method.toLowerCase() }}">{{
+                payment.method
+              }}</span>
+            </div>
+            <div class="col-case">
+              <span class="case-badge">{{ payment.patientCaseNo }}</span>
+            </div>
+            <div class="col-name">
+              <span class="patient-name Montserrat-font">{{ payment.patientName }}</span>
+            </div>
+            <div class="col-actions" (click)="$event.stopPropagation()">
+              <button
+                mat-icon-button
+                class="action-btn print-btn"
+                aria-label="Print receipt"
+                (click)="onPrint(payment)"
+                matTooltip="Print Receipt"
+              >
+                <mat-icon>print</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                class="action-btn edit-btn"
+                aria-label="Edit payment"
+                (click)="onEdit(payment)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                class="action-btn delete-btn"
+                aria-label="Delete payment"
+                (click)="onDelete(payment)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="table-empty">
+            <mat-icon class="empty-icon">search_off</mat-icon>
+            <h3 class="title-medium">No transactions found</h3>
+            <p class="body-medium text-secondary">Try updating your filters or search terms.</p>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination-bar">
+    <div class="left-controls">
+      <span class="body-medium text-secondary">Items per page:</span>
+      <select class="page-size-select" [value]="pageSize()" (change)="onPageSizeChange($event)">
+        @for (size of pageSizes; track size) {
+          <option [value]="size">{{ size }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="middle-controls">
+      <span class="body-medium text-secondary">
+        Showing {{ showingStart }} - {{ showingEnd }} of {{ totalElements() }} transactions
+      </span>
+    </div>
+
+    <div class="right-controls">
+      <button
+        mat-icon-button
+        (click)="goToFirstPage()"
+        [disabled]="currentPage() === 1 || isLoading()"
+        aria-label="First page"
+      >
+        <mat-icon>first_page</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        (click)="goToPreviousPage()"
+        [disabled]="currentPage() === 1 || isLoading()"
+        aria-label="Previous page"
+      >
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+
+      <span class="page-number-display body-medium Montserrat-font">
+        Page {{ currentPage() }} of {{ totalPages() }}
+      </span>
+
+      <button
+        mat-icon-button
+        (click)="goToNextPage()"
+        [disabled]="currentPage() === totalPages() || isLoading()"
+        aria-label="Next page"
+      >
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        (click)="goToLastPage()"
+        [disabled]="currentPage() === totalPages() || isLoading()"
+        aria-label="Last page"
+      >
+        <mat-icon>last_page</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

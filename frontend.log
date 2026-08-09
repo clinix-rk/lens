@@ -1,0 +1,57 @@
+npm notice run lens@0.0.0 start
+npm notice run ng serve
+❯ Building...
+✔ Building...
+Initial chunk files | Names          |  Raw size
+main.js             | main           |  27.14 kB | 
+styles.css          | styles         |  21.74 kB | 
+chunk-VUJOFXKG.js   | -              | 938 bytes | 
+
+                    | Initial total  |  49.81 kB
+
+Lazy chunk files    | Names          |  Raw size
+chunk-DIUVWPXN.js   | patient-detail | 467.32 kB | 
+chunk-JC2OY33Z.js   | -              |  85.04 kB | 
+chunk-PBY2MXLE.js   | patients       |  79.08 kB | 
+chunk-YXDMSXIS.js   | finances       |  63.33 kB | 
+chunk-DY7R5PKL.js   | doctor-detail  |  43.11 kB | 
+chunk-U6ODAPRX.js   | doctors        |  38.21 kB | 
+chunk-5DATJSD6.js   | search         |  29.75 kB | 
+chunk-FDQGWT4O.js   | -              |  20.60 kB | 
+chunk-E7OHVNTU.js   | -              |  14.38 kB | 
+chunk-VCNPY6HG.js   | -              |  14.25 kB | 
+chunk-YKNH7ZKF.js   | appointments   |   7.04 kB | 
+chunk-DC35HACI.js   | -              |   3.58 kB | 
+chunk-6JKX4D3U.js   | -              |   3.32 kB | 
+chunk-SKIMCTBN.js   | users          |   1.72 kB | 
+
+Application bundle generation complete. [5.960 seconds] - 2026-08-08T18:24:45.224Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  ➜  Local:   http://localhost:4200/
+fatal error: all goroutines are asleep - deadlock!
+
+goroutine 1 [chan receive]:
+github.com/evanw/esbuild/internal/helpers.(*ThreadSafeWaitGroup).Wait(...)
+	github.com/evanw/esbuild/internal/helpers/waitgroup.go:36
+main.runService.func2()
+	github.com/evanw/esbuild/cmd/esbuild/service.go:114 +0x53
+main.runService(0x1)
+	github.com/evanw/esbuild/cmd/esbuild/service.go:160 +0x637
+main.main()
+	github.com/evanw/esbuild/cmd/esbuild/main.go:252 +0xb16
+
+goroutine 2 [chan receive]:
+main.runService.func1()
+	github.com/evanw/esbuild/cmd/esbuild/service.go:98 +0x45
+created by main.runService in goroutine 1
+	github.com/evanw/esbuild/cmd/esbuild/service.go:97 +0x1ce
+
+goroutine 3 [chan receive]:
+main.(*serviceType).sendRequest(0xe478a422810, {0xa08b60, 0xe478c3ce150})
+	github.com/evanw/esbuild/cmd/esbuild/service.go:192 +0x12b
+main.runService.func3()
+	github.com/evanw/esbuild/cmd/esbuild/service.go:125 +0x3e
+created by main.runService in goroutine 1
+	github.com/evanw/esbuild/cmd/esbuild/service.go:122 +0x2c7

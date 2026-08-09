@@ -1,0 +1,38 @@
+<mat-form-field appearance="outline" style="width: 100%">
+  <mat-label>{{ label() }}</mat-label>
+  <mat-select
+    [value]="selectedValue"
+    (valueChange)="onValueChange($event)"
+    multiple
+    [placeholder]="placeholder()"
+    [disabled]="disabled"
+  >
+    @for (opt of options(); track opt) {
+      <mat-option [value]="opt">{{ opt }}</mat-option>
+    }
+    <div
+      class="custom-add-container"
+      (click)="$event.stopPropagation()"
+      (keydown)="$event.stopPropagation()"
+    >
+      <mat-form-field appearance="outline" class="custom-add-field">
+        <input
+          matInput
+          #newValInput
+          [placeholder]="addPlaceholder()"
+          (keydown.enter)="addNewItem($event, newValInput.value); newValInput.value = ''"
+        />
+        <button
+          type="button"
+          mat-icon-button
+          matSuffix
+          (click)="addNewItem($event, newValInput.value); newValInput.value = ''"
+          class="custom-add-btn"
+          aria-label="Add new item"
+        >
+          <mat-icon>add</mat-icon>
+        </button>
+      </mat-form-field>
+    </div>
+  </mat-select>
+</mat-form-field>

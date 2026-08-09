@@ -1,1 +1,164 @@
-/* You can add global styles to this file, and also import other style files */
+@use "tailwindcss";
+
+// Import Angular Material prebuilt theme styles
+@import "@angular/material/prebuilt-themes/azure-blue.css";
+
+// Force all Material Icons elements to use Material Symbols Outlined
+.material-icons, .mat-icon, .mat-icon-no-color {
+  font-family: 'Material Symbols Outlined' !important;
+}
+
+html {
+  // Apply our custom typography to all Material 3 systems
+  --mat-sys-body-large-font: 'Inter', sans-serif;
+  --mat-sys-body-medium-font: 'Inter', sans-serif;
+  --mat-sys-body-small-font: 'Inter', sans-serif;
+  --mat-sys-display-large-font: 'Montserrat', sans-serif;
+  --mat-sys-display-medium-font: 'Montserrat', sans-serif;
+  --mat-sys-display-small-font: 'Montserrat', sans-serif;
+  --mat-sys-headline-large-font: 'Montserrat', sans-serif;
+  --mat-sys-headline-medium-font: 'Montserrat', sans-serif;
+  --mat-sys-headline-small-font: 'Montserrat', sans-serif;
+  --mat-sys-label-large-font: 'Inter', sans-serif;
+  --mat-sys-label-medium-font: 'Inter', sans-serif;
+  --mat-sys-label-small-font: 'Inter', sans-serif;
+  --mat-sys-title-large-font: 'Montserrat', sans-serif;
+  --mat-sys-title-medium-font: 'Montserrat', sans-serif;
+  --mat-sys-title-small-font: 'Montserrat', sans-serif;
+
+  // Custom Light Theme Colors (Inspired by Material 3 Expressive - Noguchi Gold Theme)
+  --mat-sys-primary: #19171b; // Onyx Black
+  --mat-sys-primary-container: #EAE9E8; // Light Gray/White Tone
+  --mat-sys-on-primary: #FFFFFF;
+  --mat-sys-on-primary-container: #19171b;
+  
+  --mat-sys-secondary: #d29f22; // Gold (Action Accent)
+  --mat-sys-secondary-container: #FAF3DC;
+  --mat-sys-on-secondary: #19171b; // Onyx text on Gold for readability
+  --mat-sys-on-secondary-container: #573E00;
+  
+  --mat-sys-tertiary: #5d0018; // Deep Red (Highlight / Alert Accent)
+  --mat-sys-tertiary-container: #FEE5EB;
+  --mat-sys-on-tertiary: #FFFFFF;
+  --mat-sys-on-tertiary-container: #5d0018;
+
+  --mat-sys-background: #FAF9F6; // Tone of White
+  --mat-sys-surface: #FFFFFF; // Pure White for crisp cards
+  --mat-sys-surface-container: #F1EFEA;
+  --mat-sys-surface-container-high: #E7E5E0;
+  --mat-sys-surface-container-low: #FAF9F6;
+  --mat-sys-surface-container-lowest: #FFFFFF;
+  
+  --mat-sys-on-background: #19171b; // Onyx Black
+  --mat-sys-on-surface: #19171b; // Onyx Black
+  --mat-sys-on-surface-variant: #252628; // Smoked Charcoal
+
+  --mat-sys-outline: #252628; // Smoked Charcoal
+  --mat-sys-outline-variant: #E0DFDC;
+
+  // Glassmorphism tokens for Light Mode
+  --clinix-sidebar-bg: rgba(250, 249, 246, 0.7);
+  --clinix-sidebar-border: rgba(37, 38, 40, 0.15);
+  --clinix-glass-blur: 16px;
+  
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// Custom Dark Theme (Complementary neutral palette using Onyx & Smoked Charcoal)
+html.dark-theme {
+  --mat-sys-background: #19171b; // Onyx Black
+  --mat-sys-surface: #19171b; // Onyx Black
+  --mat-sys-surface-container: #252628; // Smoked Charcoal
+  --mat-sys-surface-container-high: #323336;
+  --mat-sys-surface-container-low: #121013;
+  --mat-sys-surface-container-lowest: #0B0A0C;
+  
+  --mat-sys-on-background: #FAF9F6; // Tone of White
+  --mat-sys-on-surface: #FAF9F6; // Tone of White
+  --mat-sys-on-surface-variant: #E0DFDC;
+  
+  --mat-sys-primary: #FAF9F6;
+  --mat-sys-primary-container: #252628;
+  --mat-sys-on-primary: #19171b;
+  --mat-sys-on-primary-container: #FAF9F6;
+  
+  --mat-sys-secondary: #d29f22; // Gold
+  --mat-sys-secondary-container: #573E00;
+  --mat-sys-on-secondary: #19171b;
+  --mat-sys-on-secondary-container: #d29f22;
+  
+  --mat-sys-tertiary: #5d0018; // Deep Red
+  --mat-sys-tertiary-container: #3C000B;
+  --mat-sys-on-tertiary: #FAF9F6;
+  --mat-sys-on-tertiary-container: #5d0018;
+  
+  --mat-sys-outline: #252628; // Smoked Charcoal
+  --mat-sys-outline-variant: #252628;
+
+  // Glassmorphism tokens for Dark Mode
+  --clinix-sidebar-bg: rgba(25, 23, 27, 0.75);
+  --clinix-sidebar-border: rgba(37, 38, 40, 0.4);
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--mat-sys-background);
+  color: var(--mat-sys-on-background, #1E1E1E);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', sans-serif;
+  color: var(--mat-sys-on-background, #1E1E1E);
+  margin-top: 0;
+}
+
+// Custom Slim Scrollbars
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-full, 9999px);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mat-sys-outline);
+}
+
+// Material Component Overrides for Expressive M3 styling
+.mat-mdc-card {
+  border-radius: var(--mat-sys-corner-large, 20px) !important;
+  border: 1px solid var(--mat-sys-outline-variant) !important;
+  box-shadow: none !important;
+  background-color: var(--mat-sys-surface) !important;
+}
+
+// Global Custom Helper styles
+.text-secondary {
+  color: var(--mat-sys-on-surface-variant, #666);
+}
+
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+  }
+}
+
+// Mat Dialog overrides for Clinix design
+.mat-mdc-dialog-container {
+  border-radius: 20px !important;
+}
+.mat-mdc-dialog-surface {
+  border-radius: 20px !important;
+  overflow: hidden !important;
+}
+

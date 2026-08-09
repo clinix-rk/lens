@@ -1,0 +1,58 @@
+::v-deep .custom-add-container {
+  display: block;
+  padding: 8px 12px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  background-color: var(--mat-sys-surface-container-low);
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+
+  .custom-add-field {
+    width: 100%;
+    
+    // Mat Form Field Compact Style Override
+    .mat-mdc-text-field-wrapper {
+      height: 38px !important;
+      border-radius: 8px !important;
+      background-color: var(--mat-sys-surface) !important;
+      padding-left: 12px !important;
+      padding-right: 8px !important;
+    }
+
+    .mat-mdc-form-field-flex {
+      align-items: center !important;
+      padding-top: 0 !important;
+    }
+
+    .mat-mdc-form-field-infix {
+      padding-top: 6px !important;
+      padding-bottom: 6px !important;
+      min-height: unset !important;
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none !important; // Hide hint/error spacing to keep it tightly packed
+    }
+
+    .custom-add-btn {
+      color: var(--mat-sys-secondary);
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      &:hover {
+        background-color: var(--mat-sys-surface-container-high);
+      }
+    }
+  }
+}
+

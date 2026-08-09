@@ -1,0 +1,113 @@
+<div class="tab-inner-container">
+  <!-- Actions Row: Search Bar (full length / flex) and Add Button -->
+  <div class="actions-row">
+    <div class="search-wrapper">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search Treatments</mat-label>
+        <mat-icon matPrefix class="search-icon">search</mat-icon>
+        <input matInput
+               type="text"
+               placeholder="Search by treatment type or details..."
+               [ngModel]="searchQuery()"
+               (ngModelChange)="onSearchChange($event)">
+      </mat-form-field>
+    </div>
+
+    <button mat-raised-button color="primary" class="add-btn hover-lift" (click)="onAdd()">
+      <mat-icon>add</mat-icon>
+      Add
+    </button>
+  </div>
+
+  <!-- Custom Card Table -->
+  <div class="table-container">
+    <div class="table-header">
+      <div class="col-date">Date</div>
+      <div class="col-details">Details</div>
+      <div class="col-actions">Actions</div>
+    </div>
+
+    <div class="table-body">
+      @if (isLoading()) {
+        <div class="table-loading">
+          <span class="body-medium text-secondary">Retrieving records...</span>
+        </div>
+      } @else {
+        @for (treatment of items(); track treatment.id) {
+          <div class="table-row">
+            <div class="col-date">
+              <span class="date-text">{{ treatment.date | date:'mediumDate' }}</span>
+            </div>
+            <div class="col-details">
+              <span class="details-text">{{ treatment.details }}</span>
+            </div>
+            <div class="col-actions">
+              <button mat-icon-button (click)="onEdit(treatment)" aria-label="Edit treatment" class="action-btn edit-btn" matTooltip="Edit Record">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button (click)="onDelete(treatment)" aria-label="Delete treatment" class="action-btn delete-btn" matTooltip="Delete Record">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="table-empty">
+            <mat-icon class="empty-icon">search_off</mat-icon>
+            <h3 class="title-medium">No treatments found</h3>
+            <p class="body-medium text-secondary">Try searching for another term or click "Add Treatment" to log an operation.</p>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div class="pagination-bar">
+    <div class="left-controls">
+      <span class="body-medium text-secondary">Items per page:</span>
+      <select class="page-size-select" [value]="pageSize()" (change)="onPageSizeChange($event)">
+        @for (size of pageSizes; track size) {
+          <option [value]="size">{{ size }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="middle-controls">
+      <span class="body-medium text-secondary">
+        Showing {{ showingStart }} - {{ showingEnd }} of {{ totalElements() }} records
+      </span>
+    </div>
+
+    <div class="right-controls">
+      <button mat-icon-button
+              (click)="goToFirstPage()"
+              [disabled]="currentPage() === 1 || isLoading()"
+              aria-label="First page">
+        <mat-icon>first_page</mat-icon>
+      </button>
+      <button mat-icon-button
+              (click)="goToPreviousPage()"
+              [disabled]="currentPage() === 1 || isLoading()"
+              aria-label="Previous page">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+
+      <span class="page-number-display body-medium Montserrat-font">
+        Page {{ currentPage() }} of {{ totalPages() }}
+      </span>
+
+      <button mat-icon-button
+              (click)="goToNextPage()"
+              [disabled]="currentPage() === totalPages() || isLoading()"
+              aria-label="Next page">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      <button mat-icon-button
+              (click)="goToLastPage()"
+              [disabled]="currentPage() === totalPages() || isLoading()"
+              aria-label="Last page">
+        <mat-icon>last_page</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
