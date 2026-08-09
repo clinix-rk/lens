@@ -1,0 +1,47 @@
+name: Promote to Release Branch
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to promote (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Configure Git
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+    
+    - name: Check if version exists
+      run: |
+        git fetch origin tag ${{ github.event.inputs.version }} || exit 1
+    
+    - name: Create/Update release branch
+      run: |
+        git checkout origin/main
+        git checkout -b release || git checkout release
+        git reset --hard origin/main
+        git push origin release -f
+    
+    - name: Tag version
+      run: |
+        git tag -a ${{ github.event.inputs.version }} -m "Release ${{ github.event.inputs.version }}" || true
+        git push origin ${{ github.event.inputs.version }}
+    
+    - name: Trigger publish workflow
+      run: |
+        gh workflow run publish-release.yml --ref release --field version=${{ github.event.inputs.version }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
