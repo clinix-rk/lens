@@ -389,7 +389,6 @@ export class ApiClientService {
   }
 
   getAllMedicines(
-    patientId: number,
     queryParams?: { pageNo?: number; pageSize?: number },
   ): Observable<T.ApiResponseListMedicineResponse> {
     return this.request<T.ApiResponseListMedicineResponse>(this.routes.getAllMedicines, {
@@ -398,20 +397,18 @@ export class ApiClientService {
   }
 
   createMedicine(
-    patientId: number,
     req: T.CreateMedicineRequest,
   ): Observable<T.ApiResponseMedicineResponse> {
     return this.request<T.ApiResponseMedicineResponse>(this.routes.createMedicine, { body: req });
   }
 
-  getMedicineById(patientId: number, id: number): Observable<T.ApiResponseMedicineResponse> {
+  getMedicineById(id: number): Observable<T.ApiResponseMedicineResponse> {
     return this.request<T.ApiResponseMedicineResponse>(this.routes.getMedicineById, {
       pathParams: { id },
     });
   }
 
   updateMedicineById(
-    patientId: number,
     id: number,
     req: T.UpdateMedicineRequest,
   ): Observable<T.ApiResponseMedicineResponse> {
@@ -421,7 +418,7 @@ export class ApiClientService {
     });
   }
 
-  deleteMedicineById(patientId: number, id: number): Observable<void> {
+  deleteMedicineById(id: number): Observable<void> {
     return this.request<void>(this.routes.deleteMedicineById, { pathParams: { id } });
   }
 
@@ -705,6 +702,43 @@ export class ApiClientService {
 
   deleteDrugDosageById(id: number): Observable<void> {
     return this.request<void>(this.routes.deleteDrugDosageById, { pathParams: { id } });
+  }
+
+  getAllInstructions(queryParams?: {
+    pageNo?: number;
+    pageSize?: number;
+  }): Observable<T.ApiResponseListInstructionResponse> {
+    return this.request<T.ApiResponseListInstructionResponse>(this.routes.getAllInstruction, {
+      queryParams: queryParams as Record<string, string | number | boolean | undefined | null>,
+    });
+  }
+
+  createInstruction(
+    req: T.CreateInstructionRequest,
+  ): Observable<T.ApiResponseInstructionResponse> {
+    return this.request<T.ApiResponseInstructionResponse>(this.routes.createInstruction, {
+      body: req,
+    });
+  }
+
+  getInstructionById(id: number): Observable<T.ApiResponseInstructionResponse> {
+    return this.request<T.ApiResponseInstructionResponse>(this.routes.getInstructionById, {
+      pathParams: { id },
+    });
+  }
+
+  updateInstructionById(
+    id: number,
+    req: T.UpdateInstructionRequest,
+  ): Observable<T.ApiResponseInstructionResponse> {
+    return this.request<T.ApiResponseInstructionResponse>(this.routes.updateInstructionById, {
+      pathParams: { id },
+      body: req,
+    });
+  }
+
+  deleteInstructionById(id: number): Observable<void> {
+    return this.request<void>(this.routes.deleteInstructionById, { pathParams: { id } });
   }
 
   getAllUsers(queryParams?: {

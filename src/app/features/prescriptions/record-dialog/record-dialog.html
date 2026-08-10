@@ -40,66 +40,83 @@
             </div>
 
             <div class="fields-grid">
+              <!-- Medicine Name Autocomplete with Create New option -->
               <mat-form-field class="field-name" appearance="outline">
                 <mat-label>Medicine Name</mat-label>
                 <input
                   matInput
-                  [value]="medRow.name"
-                  (input)="updateMedicineField(i, 'name', $any($event.target).value)"
-                  [matAutocomplete]="auto"
+                  [value]="medRow.medicineName"
+                  (input)="onMedicineNameInput(i, $any($event.target).value)"
+                  [matAutocomplete]="autoMed"
+                  placeholder="Search or type medicine name..."
                 />
-                <mat-autocomplete #auto="matAutocomplete" (optionSelected)="updateMedicineField(i, 'name', $event.option.value)">
-                  @for (name of getFilteredMedicines(i); track name) {
-                    <mat-option [value]="name">
-                      {{ name }}
+                <mat-autocomplete #autoMed="matAutocomplete" (optionSelected)="onMedicineSelected(i, $event.option.value)">
+                  @for (med of getFilteredMedicines(i); track med.id) {
+                    <mat-option [value]="med">
+                      {{ med.name }} <small class="type-tag">({{ med.type }})</small>
+                    </mat-option>
+                  }
+                  @if (medRow.medicineName.trim() && !hasExactMedicineMatch(i)) {
+                    <mat-option [value]="null" (click)="openAddMedicineDialog(i, medRow.medicineName)" class="create-option">
+                      <mat-icon>add</mat-icon> Add "{{ medRow.medicineName }}" as new medicine
                     </mat-option>
                   }
                 </mat-autocomplete>
-                @if (!medRow.name) {
+                @if (!medRow.medicineName) {
                   <mat-error>Name is required</mat-error>
+                } @else if (medRow.medicineId === null) {
+                  <mat-error>Select a valid medicine or create a new one</mat-error>
                 }
               </mat-form-field>
 
+              <!-- Instructions Autocomplete with Inline Create option -->
               <mat-form-field class="field-instructions" appearance="outline">
-                <mat-label>Instructions</mat-label>
+                <mat-label>Instructions (Optional)</mat-label>
                 <input
                   matInput
-                  [value]="medRow.instructions"
-                  (input)="updateMedicineField(i, 'instructions', $any($event.target).value)"
-                  [matAutocomplete]="instructionsAuto"
-                  placeholder="Type or select from suggestions..."
+                  [value]="medRow.instructionDisplay"
+                  (input)="onInstructionInput(i, $any($event.target).value)"
+                  [matAutocomplete]="autoInst"
+                  placeholder="Type or select instruction..."
                 />
-                <mat-autocomplete #instructionsAuto="matAutocomplete" (optionSelected)="updateMedicineField(i, 'instructions', $event.option.value)">
-                  @for (inst of getFilteredInstructions(i); track inst) {
+                <mat-autocomplete #autoInst="matAutocomplete" (optionSelected)="onInstructionSelected(i, $event.option.value)">
+                  @for (inst of getFilteredInstructions(i); track inst.id) {
                     <mat-option [value]="inst">
-                      {{ inst }}
+                      {{ inst.instruction }}
+                    </mat-option>
+                  }
+                  @if (medRow.instructionDisplay.trim() && !hasExactInstructionMatch(i)) {
+                    <mat-option [value]="null" (click)="createAndSelectInstruction(i, medRow.instructionDisplay)" class="create-option">
+                      <mat-icon>add</mat-icon> Add "{{ medRow.instructionDisplay }}" as new instruction
                     </mat-option>
                   }
                 </mat-autocomplete>
               </mat-form-field>
 
+              <!-- Dosage Select -->
               <mat-form-field class="field-dosage" appearance="outline">
                 <mat-label>Dosage</mat-label>
                 <mat-select
-                  [value]="medRow.dosage"
-                  (selectionChange)="updateMedicineField(i, 'dosage', $event.value)"
+                  [value]="medRow.dosageId"
+                  (selectionChange)="onDosageSelected(i, $event.value)"
                 >
-                  @for (dose of globalDosages(); track dose) {
-                    <mat-option [value]="dose">{{ dose }}</mat-option>
+                  @for (dose of catalogDosages(); track dose.id) {
+                    <mat-option [value]="dose.id">{{ dose.dosage }}</mat-option>
                   }
                 </mat-select>
-                @if (!medRow.dosage) {
+                @if (medRow.dosageId === null) {
                   <mat-error>Dosage is required</mat-error>
                 }
               </mat-form-field>
 
+              <!-- Quantity Field -->
               <mat-form-field class="field-quantity" appearance="outline">
                 <mat-label>Quantity</mat-label>
                 <input
                   matInput
                   type="number"
                   [value]="medRow.quantity"
-                  (input)="updateMedicineField(i, 'quantity', +$any($event.target).value)"
+                  (input)="updateQuantity(i, +$any($event.target).value)"
                   min="1"
                   step="1"
                 />
@@ -121,7 +138,7 @@
         class="add-row-btn"
         (click)="addMedicineRow()"
       >
-        <mat-icon>add</mat-icon> Add Medicine
+        <mat-icon>add</mat-icon> Add Medicine Row
       </button>
     </div>
   </div>

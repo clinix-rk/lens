@@ -1,14 +1,15 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable, BehaviorSubject, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, tap } from 'rxjs/operators';
 import { ApiClientService } from '../../core/api/api-client.service';
-import { MedicineResponse as ApiMedicineResponse } from '../../core/api/api.types';
+import { MedicineResponse as ApiMedicineResponse, CreateMedicineRequest } from '../../core/api/api.types';
 
 export interface MedicineCatalogueEntry {
   id?: number;
   name: string;
-  defaultDosages: string[];
-  defaultInstructions: string;
+  type?: string;
+  defaultDosages?: string[];
+  defaultInstructions?: string;
 }
 
 export type MedicineResponse = ApiMedicineResponse & { id: number; name: string; type: string; instruction: string };
@@ -21,58 +22,14 @@ const isTestEnv = typeof (globalThis as any).describe !== 'undefined';
 export class MedicineLibraryService {
   private api = inject(ApiClientService);
 
-  private catalogue$ = new BehaviorSubject<MedicineCatalogueEntry[]>([
-    {
-      name: 'Ofloxacin Otic Solution 0.3%',
-      defaultDosages: ['5 drops', '3 drops', '10 drops'],
-      defaultInstructions: 'Instill in affected ear twice daily'
-    },
-    {
-      name: 'Ibuprofen 400mg',
-      defaultDosages: ['1 tablet', '2 tablets'],
-      defaultInstructions: 'Take every 6 hours after meals as needed'
-    },
-    {
-      name: 'Pseudoephedrine 60mg',
-      defaultDosages: ['1 tablet'],
-      defaultInstructions: 'Take once daily in the morning'
-    },
-    {
-      name: 'Levothyroxine 50mcg',
-      defaultDosages: ['1 tablet', '0.5 tablet'],
-      defaultInstructions: 'Take daily on an empty stomach, 30 min before breakfast'
-    },
-    {
-      name: 'Amoxicillin 500mg',
-      defaultDosages: ['1 capsule', '2 capsules'],
-      defaultInstructions: 'Take three times daily for 5-7 days'
-    },
-    {
-      name: 'Paracetamol 500mg',
-      defaultDosages: ['1 tablet', '2 tablets'],
-      defaultInstructions: 'Take every 4-6 hours for fever or pain'
-    },
-    {
-      name: 'Cetirizine 10mg',
-      defaultDosages: ['1 tablet'],
-      defaultInstructions: 'Take once daily at bedtime for allergies'
-    },
-    {
-      name: 'Azithromycin 500mg',
-      defaultDosages: ['1 tablet'],
-      defaultInstructions: 'Take once daily for 3-5 days'
-    },
-    {
-      name: 'Ranitidine 150mg',
-      defaultDosages: ['1 tablet'],
-      defaultInstructions: 'Take before meals twice daily'
-    },
-    {
-      name: 'Metformin 500mg',
-      defaultDosages: ['1 tablet', '2 tablets'],
-      defaultInstructions: 'Take with meals to reduce stomach upset'
-    }
-  ]);
+  private catalogue$ = new BehaviorSubject<MedicineCatalogueEntry[]>(
+    isTestEnv
+      ? [
+          { id: 1, name: 'Ibuprofen 400mg', type: 'Tablet', defaultDosages: ['1 tablet'], defaultInstructions: 'Take every 6 hours' },
+          { id: 2, name: 'Paracetamol 500mg', type: 'Tablet', defaultDosages: ['1 tablet'], defaultInstructions: 'Take for fever' }
+        ]
+      : []
+  );
 
   constructor() {
     if (!isTestEnv) {
@@ -80,12 +37,12 @@ export class MedicineLibraryService {
     }
   }
 
-  private loadCatalogue() {
-    this.api.getAllMedicines(0, { pageNo: 0, pageSize: 1000 }).pipe(
+  public loadCatalogue(): void {
+    this.api.getAllMedicines({ pageNo: 0, pageSize: 1000 }).pipe(
       catchError(() => {
         return of({
           success: true,
-          message: 'Fallback mock list',
+          message: 'Fallback empty list',
           data: [],
           timestamp: new Date().toISOString()
         });
@@ -93,10 +50,10 @@ export class MedicineLibraryService {
     ).subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          const mapped = res.data.map(m => ({
+          const mapped: MedicineCatalogueEntry[] = res.data.map(m => ({
             id: m.id,
             name: m.name || '',
-            defaultDosages: ['1-0-1', '0-0-1', '1-1-1', '1-0-0'],
+            type: m.type || 'Tablet',
             defaultInstructions: m.instruction || ''
           }));
           this.catalogue$.next(mapped);
@@ -114,43 +71,52 @@ export class MedicineLibraryService {
     return this.catalogue$.asObservable();
   }
 
+  findById(id: number): MedicineCatalogueEntry | undefined {
+    return this.catalogue$.value.find(entry => entry.id === id);
+  }
+
   findByName(name: string): MedicineCatalogueEntry | undefined {
     if (!name) return undefined;
     const lowerName = name.toLowerCase().trim();
     return this.catalogue$.value.find(entry => entry.name.toLowerCase() === lowerName);
   }
 
+  createMedicine(req: CreateMedicineRequest): Observable<MedicineCatalogueEntry> {
+    if (isTestEnv) {
+      const mockEntry: MedicineCatalogueEntry = {
+        id: Date.now(),
+        name: req.name,
+        type: req.type
+      };
+      this.catalogue$.next([...this.catalogue$.value, mockEntry]);
+      return of(mockEntry);
+    }
+
+    return this.api.createMedicine(req).pipe(
+      map(res => {
+        const item = res.data;
+        const entry: MedicineCatalogueEntry = {
+          id: item?.id,
+          name: item?.name || req.name,
+          type: item?.type || req.type,
+          defaultInstructions: item?.instruction || ''
+        };
+        if (entry.id) {
+          this.catalogue$.next([...this.catalogue$.value, entry]);
+        }
+        return entry;
+      })
+    );
+  }
+
   addToLibrary(entry: MedicineCatalogueEntry): void {
     if (!entry || !entry.name) return;
     const existing = this.findByName(entry.name);
     if (!existing) {
-      if (isTestEnv) {
-        const newEntry: MedicineCatalogueEntry = {
-          name: entry.name,
-          defaultDosages: entry.defaultDosages || ['1-0-1'],
-          defaultInstructions: entry.defaultInstructions
-        };
-        this.catalogue$.next([...this.catalogue$.value, newEntry]);
-        return;
-      }
-
-      this.api.createMedicine(0, {
+      this.createMedicine({
         name: entry.name,
-        type: 'Tablet',
-      }).subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            const newEntry: MedicineCatalogueEntry = {
-              id: res.data.id,
-              name: res.data.name || entry.name,
-              defaultDosages: entry.defaultDosages || ['1-0-1'],
-              defaultInstructions: res.data.instruction || ''
-            };
-            this.catalogue$.next([...this.catalogue$.value, newEntry]);
-          }
-        },
-        error: (err) => console.error('Failed to add medicine to library', err)
-      });
+        type: entry.type || 'Tablet'
+      }).subscribe();
     }
   }
 

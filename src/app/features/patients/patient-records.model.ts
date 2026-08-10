@@ -34,6 +34,10 @@ export interface Treatment {
 }
 
 export interface Medicine {
+  id?: number;
+  medicineId?: number;
+  dosageId?: number;
+  instructionId?: number;
   name: string;
   dosage: string;
   instructions: string;
@@ -130,7 +134,15 @@ export interface CreatePrescriptionRequest {
   patientId: number;
   date: string;
   details: string;
-  medicines: { name: string; dosage: string; instructions: string; quantity: number; }[];
+  medicines: {
+    medicineId?: number;
+    dosageId?: number;
+    instructionId?: number;
+    name?: string;
+    dosage?: string;
+    instructions?: string;
+    quantity: number;
+  }[];
 }
 export interface UpdatePrescriptionRequest extends CreatePrescriptionRequest { id: number; }
 

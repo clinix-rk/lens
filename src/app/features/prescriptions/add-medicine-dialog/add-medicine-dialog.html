@@ -1,0 +1,39 @@
+<h2 mat-dialog-title class="dialog-title">Create New Medicine</h2>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="medicineForm" (ngSubmit)="onSubmit()" class="form-grid">
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Medicine Name</mat-label>
+      <input matInput formControlName="name" placeholder="e.g. Amoxicillin 500mg" />
+      @if (medicineForm.get('name')?.hasError('required')) {
+        <mat-error>Medicine name is required</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field class="full-width" appearance="outline">
+      <mat-label>Medicine Type</mat-label>
+      <mat-select formControlName="type">
+        @for (t of medicineTypes; track t) {
+          <mat-option [value]="t">{{ t }}</mat-option>
+        }
+      </mat-select>
+      @if (medicineForm.get('type')?.hasError('required')) {
+        <mat-error>Type is required</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions class="dialog-actions">
+  <button mat-button (click)="onCancel()" type="button" class="cancel-btn">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    [disabled]="medicineForm.invalid || isSubmitting"
+    (click)="onSubmit()"
+    type="submit"
+    class="submit-btn"
+  >
+    Save & Select
+  </button>
+</mat-dialog-actions>

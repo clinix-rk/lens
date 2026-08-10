@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatSelect, MatOption } from '@angular/material/select';
@@ -12,19 +12,20 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { provideNativeDateAdapter } from '@angular/material/core';
 import { PatientRecordsService } from '../../patients/patient-records.service';
 import { Prescription, Medicine } from '../../patients/patient-records.model';
-import { MedicineLibraryService } from '../../../shared/services/medicine-library.service';
-import { DrugDosageService } from '../drug-dosage.service';
+import { MedicineLibraryService, MedicineCatalogueEntry } from '../../../shared/services/medicine-library.service';
+import { DrugDosageService, DrugDosageResponse } from '../drug-dosage.service';
+import { InstructionCatalogService, InstructionCatalogResponse } from '../instruction-catalog.service';
+import { AddMedicineDialog } from '../add-medicine-dialog/add-medicine-dialog';
+import { forkJoin } from 'rxjs';
 
 export interface MedicineRow {
-  name: string;
-  dosage: string;
-  instructions: string;
+  medicineId: number | null;
+  medicineName: string;
+  dosageId: number | null;
+  dosageDisplay: string;
+  instructionId: number | null;
+  instructionDisplay: string;
   quantity: number;
-  isFromCatalogue: boolean;
-  defaultDosages: string[];
-  availableDosages: string[];
-  availableInstructions: string[];
-  filteredMedicines: string[];
 }
 
 export interface PrescriptionDialogData {
@@ -58,9 +59,11 @@ export interface PrescriptionDialogData {
 export class RecordDialogPrescription implements OnInit {
   private dialogRef = inject(MatDialogRef<RecordDialogPrescription>);
   private data = inject<PrescriptionDialogData>(MAT_DIALOG_DATA);
+  private dialog = inject(MatDialog);
   private recordsService = inject(PatientRecordsService);
   private medicineLibrary = inject(MedicineLibraryService);
   private dosageService = inject(DrugDosageService);
+  private instructionService = inject(InstructionCatalogService);
 
   // Signals
   isEditMode = signal(false);
@@ -68,161 +71,271 @@ export class RecordDialogPrescription implements OnInit {
   prescriptionDate = signal(new Date());
   prescriptionDetails = signal('');
   medicines = signal<MedicineRow[]>([]);
-  allMedicineNames = signal<string[]>([]);
-  globalDosages = signal<string[]>([]);
-  globalInstructions = signal<string[]>([]);
+
+  catalogMedicines = signal<MedicineCatalogueEntry[]>([]);
+  catalogDosages = signal<DrugDosageResponse[]>([]);
+  catalogInstructions = signal<InstructionCatalogResponse[]>([]);
   isLoading = signal(true);
 
   ngOnInit() {
     this.isEditMode.set(!!this.data.prescription);
 
-    // Load medicine names
-    if (typeof this.medicineLibrary.getNamesObservable === 'function') {
-      this.medicineLibrary.getNamesObservable().subscribe(names => {
-        this.allMedicineNames.set(names);
-      });
-    } else {
-      this.allMedicineNames.set(this.medicineLibrary.getNames() || []);
-    }
+    // Fetch catalog data concurrently
+    forkJoin({
+      meds: this.medicineLibrary.getAllMedicines(),
+      dosages: this.dosageService.getAllDosages(0, 1000),
+      instructions: this.instructionService.getAllInstructions(0, 1000)
+    }).subscribe({
+      next: ({ meds, dosages, instructions }) => {
+        this.catalogMedicines.set(meds || []);
+        this.catalogDosages.set(dosages.data?.items || []);
+        this.catalogInstructions.set(instructions.data?.items || []);
 
-    // Load instructions from medicine library
-    const libraryEntries = this.medicineLibrary.getAll() || [];
-    const instructionsSet = new Set<string>();
-    libraryEntries.forEach(entry => {
-      if (entry.defaultInstructions) {
-        instructionsSet.add(entry.defaultInstructions.trim());
+        const prescription = this.data.prescription;
+        if (prescription) {
+          this.prescriptionDate.set(new Date(prescription.date));
+          this.prescriptionDetails.set(prescription.details || '');
+          if (prescription.medicines && prescription.medicines.length > 0) {
+            prescription.medicines.forEach(m => this.addMedicineRowFromPrescription(m));
+          } else {
+            this.addMedicineRow();
+          }
+        } else {
+          this.addMedicineRow();
+        }
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        console.error('Failed to load catalog data for prescription dialog', err);
+        this.addMedicineRow();
+        this.isLoading.set(false);
       }
     });
-    const standardPresets = [
-      'Take after meals',
-      'Take before meals',
-      'Take once daily',
-      'Take twice daily',
-      'As directed by Dentist'
-    ];
-    standardPresets.forEach(p => instructionsSet.add(p));
-
-    const currentInstructions = Array.from(instructionsSet);
-    if (this.data.prescription?.medicines) {
-      this.data.prescription.medicines.forEach(m => {
-        if (m.instructions && !currentInstructions.includes(m.instructions)) {
-          currentInstructions.push(m.instructions);
-        }
-      });
-    }
-    this.globalInstructions.set(currentInstructions);
-
-    // Load dosages
-    this.dosageService.getAllDosages(0, 1000).subscribe({
-      next: (res) => {
-        const dosages = res.data?.items.map(d => d.dosage) || [];
-        if (this.data.prescription?.medicines) {
-          this.data.prescription.medicines.forEach(m => {
-            if (m.dosage && !dosages.includes(m.dosage)) {
-              dosages.push(m.dosage);
-            }
-          });
-        }
-        this.globalDosages.set(dosages);
-      },
-      error: (err) => console.error('Failed to load dosages', err)
-    });
-
-    // Set prescription data
-    const prescription = this.data.prescription;
-    if (prescription) {
-      this.prescriptionDate.set(new Date(prescription.date));
-      this.prescriptionDetails.set(prescription.details);
-      prescription.medicines.forEach(m => this.addMedicineRow(m));
-    } else {
-      this.addMedicineRow();
-    }
-
-    this.isLoading.set(false);
   }
 
-  addMedicineRow(med?: Medicine) {
-    const entry = med ? this.medicineLibrary.findByName(med.name) : undefined;
-    const isFromCatalogue = !!entry;
-    const defaultDosages = entry ? entry.defaultDosages : [];
-
-    const initialDosages = [...this.globalDosages()];
-    if (med?.dosage && !initialDosages.includes(med.dosage)) {
-      initialDosages.push(med.dosage);
-    }
-    if (defaultDosages) {
-      defaultDosages.forEach(d => {
-        if (!initialDosages.includes(d)) initialDosages.push(d);
-      });
-    }
-
-    const initialInstructions = [...this.globalInstructions()];
-    if (med?.instructions && !initialInstructions.includes(med.instructions)) {
-      initialInstructions.push(med.instructions);
-    }
-    if (entry?.defaultInstructions && !initialInstructions.includes(entry.defaultInstructions)) {
-      initialInstructions.push(entry.defaultInstructions);
-    }
-
+  addMedicineRow() {
     const newRow: MedicineRow = {
-      name: med?.name || '',
-      dosage: med?.dosage || '',
-      instructions: med?.instructions || '',
-      quantity: med?.quantity ?? 1,
-      isFromCatalogue,
-      defaultDosages,
-      availableDosages: initialDosages,
-      availableInstructions: initialInstructions,
-      filteredMedicines: []
+      medicineId: null,
+      medicineName: '',
+      dosageId: null,
+      dosageDisplay: '',
+      instructionId: null,
+      instructionDisplay: '',
+      quantity: 1
     };
-
     this.medicines.update(m => [...m, newRow]);
   }
 
-  updateMedicineField(index: number, field: keyof MedicineRow, value: any) {
-    this.medicines.update(meds => {
-      const updated = [...meds];
-      const row = updated[index];
+  private addMedicineRowFromPrescription(m: Medicine) {
+    // Resolve medicineId & medicineName
+    let medId = m.medicineId ?? null;
+    let medName = m.name || '';
+    if (medId && !medName) {
+      const match = this.catalogMedicines().find(entry => entry.id === medId);
+      if (match) medName = match.name;
+    } else if (!medId && medName) {
+      const match = this.catalogMedicines().find(entry => entry.name.toLowerCase() === medName.toLowerCase().trim());
+      if (match) medId = match.id ?? null;
+    }
 
-      if (field === 'name') {
-        const match = this.medicineLibrary.findByName(value || '');
-        row.name = value;
-        if (match) {
-          row.isFromCatalogue = true;
-          row.defaultDosages = match.defaultDosages;
-          row.availableDosages = [...this.globalDosages()];
-          row.availableInstructions = [...this.globalInstructions()];
-        } else {
-          row.isFromCatalogue = false;
-          row.defaultDosages = [];
-          row.availableDosages = [...this.globalDosages()];
-          row.availableInstructions = [...this.globalInstructions()];
-        }
-        // dosage and instructions are intentionally NOT auto-filled
+    // Resolve dosageId & dosageDisplay
+    let dosId = m.dosageId ?? null;
+    let dosDisplay = m.dosage || '';
+    if (dosId && !dosDisplay) {
+      const match = this.catalogDosages().find(d => d.id === dosId);
+      if (match) dosDisplay = match.dosage;
+    } else if (!dosId && dosDisplay) {
+      const match = this.catalogDosages().find(d => d.dosage.toLowerCase() === dosDisplay.toLowerCase().trim());
+      if (match) dosId = match.id ?? null;
+    }
+
+    // Resolve instructionId & instructionDisplay
+    let instId = m.instructionId ?? null;
+    let instDisplay = m.instructions || '';
+    if (instId && !instDisplay) {
+      const match = this.catalogInstructions().find(i => i.id === instId);
+      if (match) instDisplay = match.instruction;
+    } else if (!instId && instDisplay) {
+      const match = this.catalogInstructions().find(i => i.instruction.toLowerCase() === instDisplay.toLowerCase().trim());
+      if (match) instId = match.id ?? null;
+    }
+
+    const row: MedicineRow = {
+      medicineId: medId,
+      medicineName: medName,
+      dosageId: dosId,
+      dosageDisplay: dosDisplay,
+      instructionId: instId,
+      instructionDisplay: instDisplay,
+      quantity: m.quantity ?? 1
+    };
+
+    this.medicines.update(rows => [...rows, row]);
+  }
+
+  // --- Medicine Handlers ---
+  onMedicineNameInput(index: number, name: string) {
+    this.medicines.update(rows => {
+      const updated = [...rows];
+      const row = { ...updated[index] };
+      row.medicineName = name;
+
+      const match = this.catalogMedicines().find(m => m.name.toLowerCase() === name.toLowerCase().trim());
+      if (match && match.id) {
+        row.medicineId = match.id;
       } else {
-        (row[field] as any) = value;
+        row.medicineId = null;
       }
-
+      updated[index] = row;
       return updated;
     });
   }
 
-  getFilteredMedicines(index: number): string[] {
-    const medicine = this.medicines()[index];
-    if (!medicine) return [];
-    const filterValue = medicine.name.toLowerCase().trim();
-    return this.allMedicineNames().filter(option =>
-      option.toLowerCase().includes(filterValue)
-    );
+  onMedicineSelected(index: number, entry: MedicineCatalogueEntry) {
+    this.medicines.update(rows => {
+      const updated = [...rows];
+      const row = { ...updated[index] };
+      row.medicineId = entry.id ?? null;
+      row.medicineName = entry.name;
+      updated[index] = row;
+      return updated;
+    });
   }
 
-  getFilteredInstructions(index: number): string[] {
-    const medicine = this.medicines()[index];
-    if (!medicine) return [];
-    const filterValue = medicine.instructions.toLowerCase().trim();
-    return medicine.availableInstructions.filter(option =>
-      option.toLowerCase().includes(filterValue)
-    );
+  openAddMedicineDialog(index: number, typedName?: string) {
+    const dialogRef = this.dialog.open(AddMedicineDialog, {
+      width: '420px',
+      data: { defaultName: typedName || this.medicines()[index]?.medicineName || '' }
+    });
+
+    dialogRef.afterClosed().subscribe((created: MedicineCatalogueEntry | null) => {
+      if (created && created.id) {
+        // Refresh catalog list
+        const updatedCatalog = [...this.catalogMedicines()];
+        if (!updatedCatalog.some(m => m.id === created.id)) {
+          updatedCatalog.push(created);
+          this.catalogMedicines.set(updatedCatalog);
+        }
+
+        // Select created medicine into current row
+        this.medicines.update(rows => {
+          const updated = [...rows];
+          const row = { ...updated[index] };
+          row.medicineId = created.id!;
+          row.medicineName = created.name;
+          updated[index] = row;
+          return updated;
+        });
+      }
+    });
+  }
+
+  getFilteredMedicines(index: number): MedicineCatalogueEntry[] {
+    const row = this.medicines()[index];
+    if (!row) return this.catalogMedicines();
+    const query = row.medicineName.toLowerCase().trim();
+    if (!query) return this.catalogMedicines();
+    return this.catalogMedicines().filter(m => m.name.toLowerCase().includes(query));
+  }
+
+  // --- Dosage Handlers ---
+  onDosageSelected(index: number, dosageId: number) {
+    const match = this.catalogDosages().find(d => d.id === dosageId);
+    this.medicines.update(rows => {
+      const updated = [...rows];
+      const row = { ...updated[index] };
+      row.dosageId = dosageId;
+      row.dosageDisplay = match ? match.dosage : '';
+      updated[index] = row;
+      return updated;
+    });
+  }
+
+  // --- Instruction Handlers ---
+  onInstructionInput(index: number, text: string) {
+    this.medicines.update(rows => {
+      const updated = [...rows];
+      const row = { ...updated[index] };
+      row.instructionDisplay = text;
+
+      const match = this.catalogInstructions().find(i => i.instruction.toLowerCase() === text.toLowerCase().trim());
+      if (match && match.id) {
+        row.instructionId = match.id;
+      } else {
+        row.instructionId = null;
+      }
+      updated[index] = row;
+      return updated;
+    });
+  }
+
+  onInstructionSelected(index: number, inst: InstructionCatalogResponse) {
+    this.medicines.update(rows => {
+      const updated = [...rows];
+      const row = { ...updated[index] };
+      row.instructionId = inst.id ?? null;
+      row.instructionDisplay = inst.instruction || '';
+      updated[index] = row;
+      return updated;
+    });
+  }
+
+  createAndSelectInstruction(index: number, text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    this.instructionService.createInstruction({ instruction: trimmed }).subscribe({
+      next: (res) => {
+        const created = res.data;
+        if (created && created.id) {
+          // Add to catalog instructions
+          const updatedCatalog = [...this.catalogInstructions(), created];
+          this.catalogInstructions.set(updatedCatalog);
+
+          // Update current row
+          this.medicines.update(rows => {
+            const updated = [...rows];
+            const row = { ...updated[index] };
+            row.instructionId = created.id!;
+            row.instructionDisplay = created.instruction!;
+            updated[index] = row;
+            return updated;
+          });
+        }
+      },
+      error: (err) => console.error('Failed to create instruction', err)
+    });
+  }
+
+  getFilteredInstructions(index: number): InstructionCatalogResponse[] {
+    const row = this.medicines()[index];
+    if (!row) return this.catalogInstructions();
+    const query = row.instructionDisplay.toLowerCase().trim();
+    if (!query) return this.catalogInstructions();
+    return this.catalogInstructions().filter(i => i.instruction.toLowerCase().includes(query));
+  }
+
+  hasExactInstructionMatch(index: number): boolean {
+    const row = this.medicines()[index];
+    if (!row || !row.instructionDisplay.trim()) return true;
+    const query = row.instructionDisplay.toLowerCase().trim();
+    return this.catalogInstructions().some(i => i.instruction.toLowerCase() === query);
+  }
+
+  hasExactMedicineMatch(index: number): boolean {
+    const row = this.medicines()[index];
+    if (!row || !row.medicineName.trim()) return true;
+    const query = row.medicineName.toLowerCase().trim();
+    return this.catalogMedicines().some(m => m.name.toLowerCase() === query);
+  }
+
+  // --- General Row Handlers ---
+  updateQuantity(index: number, qty: number) {
+    this.medicines.update(rows => {
+      const updated = [...rows];
+      updated[index] = { ...updated[index], quantity: qty };
+      return updated;
+    });
   }
 
   removeMedicineRow(index: number) {
@@ -233,7 +346,7 @@ export class RecordDialogPrescription implements OnInit {
 
   isFormValid(): boolean {
     if (!this.prescriptionDate()) return false;
-    return this.medicines().every(m => m.name && m.dosage && m.quantity > 0);
+    return this.medicines().every(m => m.medicineId != null && m.dosageId != null && m.quantity >= 1);
   }
 
   onSubmit() {
@@ -241,25 +354,17 @@ export class RecordDialogPrescription implements OnInit {
 
     const formattedDate = this.formatDate(this.prescriptionDate());
 
-    // Add custom medicines to library
-    this.medicines().forEach(m => {
-      if (!m.isFromCatalogue) {
-        this.medicineLibrary.addToLibrary({
-          name: m.name,
-          defaultDosages: [m.dosage],
-          defaultInstructions: m.instructions
-        });
-      }
-    });
-
     const payload = {
       patientId: this.data.patientId,
       date: formattedDate,
       details: this.prescriptionDetails(),
       medicines: this.medicines().map(m => ({
-        name: m.name,
-        dosage: m.dosage,
-        instructions: m.instructions,
+        medicineId: m.medicineId!,
+        dosageId: m.dosageId!,
+        ...(m.instructionId != null ? { instructionId: m.instructionId } : {}),
+        name: m.medicineName,
+        dosage: m.dosageDisplay,
+        instructions: m.instructionDisplay,
         quantity: Number(m.quantity)
       }))
     };

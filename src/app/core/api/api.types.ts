@@ -9,6 +9,7 @@ export type SuggestionStatus = 'SUGGESTED' | 'ACCEPTED' | 'DECLINED';
 export interface PrescriptionMedicineRequest {
   medicineId: number;
   dosageId: number;
+  instructionId?: number;
   quantity: number;
 }
 
@@ -47,6 +48,7 @@ export interface PrescriptionMedicineResponse {
   id?: number;
   medicineId?: number;
   dosageId?: number;
+  instructionId?: number;
   quantity?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -392,6 +394,31 @@ export interface DrugDosageResponse {
   updatedAt?: string;
 }
 
+export interface UpdateInstructionRequest {
+  instruction: string;
+}
+
+export interface CreateInstructionRequest {
+  instruction: string;
+}
+
+export interface ApiResponseInstructionResponse {
+  success?: boolean;
+  statusCode?: number;
+  message?: string;
+  data?: InstructionResponse;
+  errors?: ApiError[];
+  pagination?: PaginationMetadata;
+  timestamp?: string;
+}
+
+export interface InstructionResponse {
+  id?: number;
+  instruction?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface CreatePrescriptionRequest {
   patientId: number;
   date: string;
@@ -615,6 +642,16 @@ export interface ApiResponseListDrugDosageResponse {
   statusCode?: number;
   message?: string;
   data?: DrugDosageResponse[];
+  errors?: ApiError[];
+  pagination?: PaginationMetadata;
+  timestamp?: string;
+}
+
+export interface ApiResponseListInstructionResponse {
+  success?: boolean;
+  statusCode?: number;
+  message?: string;
+  data?: InstructionResponse[];
   errors?: ApiError[];
   pagination?: PaginationMetadata;
   timestamp?: string;

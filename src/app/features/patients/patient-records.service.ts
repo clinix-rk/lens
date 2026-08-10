@@ -27,6 +27,7 @@ import { ComplainCategoryService, ComplainCategoryResponse } from '../complains/
 import { TreatmentCategoryService, TreatmentCategoryResponse } from '../treatments/treatment-category.service';
 import { MedicineLibraryService } from '../../shared/services/medicine-library.service';
 import { DrugDosageService, DrugDosageResponse } from '../prescriptions/drug-dosage.service';
+import { InstructionCatalogService, InstructionCatalogResponse } from '../prescriptions/instruction-catalog.service';
 import {
   ComplainResponse,
   SuggestionResponse,
@@ -44,26 +45,30 @@ export class PatientRecordsService {
   private treatmentCategoryService = inject(TreatmentCategoryService);
   private medicineLibrary = inject(MedicineLibraryService);
   private dosageService = inject(DrugDosageService);
+  private instructionCatalogService = inject(InstructionCatalogService);
 
   private complainCategories: ComplainCategoryResponse[] = [];
   private treatmentCategories: TreatmentCategoryResponse[] = [];
   private dosageCache: DrugDosageResponse[] = [];
+  private instructionCache: InstructionCatalogResponse[] = [];
 
   constructor() {}
 
   private ensureCacheLoaded(): Observable<void> {
-    if (this.complainCategories.length > 0 && this.treatmentCategories.length > 0 && this.dosageCache.length > 0) {
+    if (this.complainCategories.length > 0 && this.treatmentCategories.length > 0 && this.dosageCache.length > 0 && this.instructionCache.length > 0) {
       return of(undefined);
     }
     return forkJoin({
       complain: this.complainCategoryService.getAllCategories(0, 1000).pipe(catchError(() => of({ data: { items: [] } } as any))),
       treatment: this.treatmentCategoryService.getAllCategories(0, 1000).pipe(catchError(() => of({ data: { items: [] } } as any))),
-      dosage: this.dosageService.getAllDosages(0, 1000).pipe(catchError(() => of({ data: { items: [] } } as any)))
+      dosage: this.dosageService.getAllDosages(0, 1000).pipe(catchError(() => of({ data: { items: [] } } as any))),
+      instruction: this.instructionCatalogService.getAllInstructions(0, 1000).pipe(catchError(() => of({ data: { items: [] } } as any)))
     }).pipe(
       map(res => {
         this.complainCategories = res.complain.data?.items || [];
         this.treatmentCategories = res.treatment.data?.items || [];
         this.dosageCache = res.dosage.data?.items || [];
+        this.instructionCache = res.instruction.data?.items || [];
       }),
       map(() => undefined)
     );
@@ -109,9 +114,9 @@ export class PatientRecordsService {
     const existing = this.medicineLibrary.findByName(name);
     if (existing && existing.id) return of(existing.id);
 
-    return this.api.createMedicine(patientId, {
+    return this.api.createMedicine({
       name,
-      type: '',
+      type: 'Tablet',
     }).pipe(
       map(res => {
         const m = res.data;
@@ -192,10 +197,15 @@ export class PatientRecordsService {
     const medicines = (res.medicines || []).map(m => {
       const med = this.medicineLibrary.getAll().find(entry => entry.id === m.medicineId);
       const dos = this.dosageCache.find(d => d.id === m.dosageId);
+      const inst = m.instructionId ? this.instructionCache.find(i => i.id === m.instructionId) : undefined;
       return {
+        id: m.id,
+        medicineId: m.medicineId,
+        dosageId: m.dosageId,
+        instructionId: m.instructionId,
         name: med ? med.name : 'Unknown Medicine',
         dosage: dos ? dos.dosage : '1-0-1',
-        instructions: med ? med.defaultInstructions : '',
+        instructions: inst ? inst.instruction : (med ? (med.defaultInstructions || '') : ''),
         quantity: m.quantity || 1
       };
     });
@@ -491,13 +501,16 @@ export class PatientRecordsService {
   // --- Prescriptions Write Methods ---
   addPrescription(request: CreatePrescriptionRequest): Observable<Prescription> {
     const medObs = request.medicines.map(m => {
+      const medId$ = m.medicineId ? of(m.medicineId) : this.getOrCreateMedicineId(request.patientId, m.name || '');
+      const dosId$ = m.dosageId ? of(m.dosageId) : this.getOrCreateDosageId(m.dosage || '');
       return forkJoin({
-        medId: this.getOrCreateMedicineId(request.patientId, m.name),
-        dosId: this.getOrCreateDosageId(m.dosage)
+        medId: medId$,
+        dosId: dosId$
       }).pipe(
         map(({ medId, dosId }) => ({
           medicineId: medId,
           dosageId: dosId,
+          ...(m.instructionId != null ? { instructionId: m.instructionId } : {}),
           quantity: m.quantity
         }))
       );
@@ -519,13 +532,16 @@ export class PatientRecordsService {
 
   updatePrescription(request: UpdatePrescriptionRequest): Observable<Prescription> {
     const medObs = request.medicines.map(m => {
+      const medId$ = m.medicineId ? of(m.medicineId) : this.getOrCreateMedicineId(request.patientId, m.name || '');
+      const dosId$ = m.dosageId ? of(m.dosageId) : this.getOrCreateDosageId(m.dosage || '');
       return forkJoin({
-        medId: this.getOrCreateMedicineId(request.patientId, m.name),
-        dosId: this.getOrCreateDosageId(m.dosage)
+        medId: medId$,
+        dosId: dosId$
       }).pipe(
         map(({ medId, dosId }) => ({
           medicineId: medId,
           dosageId: dosId,
+          ...(m.instructionId != null ? { instructionId: m.instructionId } : {}),
           quantity: m.quantity
         }))
       );
