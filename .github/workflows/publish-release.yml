@@ -26,7 +26,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '24'
+        node-version: '20'
         cache: 'npm'
     
     - name: Install dependencies
@@ -61,12 +61,9 @@ jobs:
     
     - name: Extract metadata
       id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ghcr.io/${{ github.repository_owner }}/lens
-        tags: |
-          type=raw,value=${{ steps.version.outputs.VERSION }}
-          type=raw,value=latest
+      run: |
+        ORG_NAME=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+        echo "IMAGE=ghcr.io/${ORG_NAME}/lens" >> $GITHUB_OUTPUT
     
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
@@ -74,16 +71,16 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        build-args: |
-          BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-          VCS_REF=${{ github.sha }}
-          VERSION=${{ steps.version.outputs.VERSION }}
+        tags: |
+          ${{ steps.meta.outputs.IMAGE }}:${{ steps.version.outputs.VERSION }}
+          ${{ steps.meta.outputs.IMAGE }}:latest
+        labels: |
+          org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
+          org.opencontainers.image.created=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
     
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/')
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ steps.version.outputs.VERSION }}
         generate_release_notes: true
