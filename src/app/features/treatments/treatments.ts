@@ -194,8 +194,9 @@ export class Treatments implements OnInit, OnDestroy {
       'Delete Treatment',
       true
     ).subscribe((confirmed) => {
+      console.log("DELETION CONFIRMATION", confirmed);
       if (confirmed) {
-        this.recordsService.deleteTreatment(treatment.id).subscribe(() => {
+        this.recordsService.deleteTreatment(treatment.patientId, treatment.id).subscribe(() => {
           this.loadData();
         });
       }

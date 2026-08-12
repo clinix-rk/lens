@@ -549,8 +549,8 @@ export class ApiClientService {
     });
   }
 
-  deleteTreatmentById(id: number): Observable<void> {
-    return this.request<void>(this.routes.deleteTreatmentById, { pathParams: { id } });
+  deleteTreatmentById(patientId: number, id: number): Observable<void> {
+    return this.request<void>(this.routes.deleteTreatmentById, { pathParams: { patientId, id } });
   }
 
   getAllTreatmentCategories(): Observable<T.ApiResponseListTreatmentCategoryResponse> {

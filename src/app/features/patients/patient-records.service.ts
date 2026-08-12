@@ -494,8 +494,8 @@ export class PatientRecordsService {
     );
   }
 
-  deleteTreatment(id: number): Observable<void> {
-    return this.api.deleteTreatmentById(id);
+  deleteTreatment(patientId: number, id: number): Observable<void> {
+    return this.api.deleteTreatmentById(patientId, id);
   }
 
   // --- Prescriptions Write Methods ---
