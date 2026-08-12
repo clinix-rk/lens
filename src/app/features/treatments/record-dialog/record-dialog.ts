@@ -6,7 +6,6 @@ import { MatFormField, MatLabel, MatError, MatSuffix } from '@angular/material/f
 import { MatInput } from '@angular/material/input';
 import { MatButton } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatIcon } from '@angular/material/icon';
 import { PatientRecordsService } from '../../patients/patient-records.service';
 import { Treatment } from '../../patients/patient-records.model';
@@ -35,7 +34,6 @@ export interface TreatmentDialogData {
     HierarchicalTypePicker,
     MatDatepickerModule,
   ],
-  providers: [provideNativeDateAdapter()],
   templateUrl: './record-dialog.html',
   styleUrl: './record-dialog.scss',
 })
@@ -137,7 +135,7 @@ export class RecordDialogTreatment implements OnInit {
 
   private formatDate(date: any): string {
     if (!date) return '';
-    const d = new Date(date);
+    const d = date instanceof Date ? date : (typeof date.toDate === 'function' ? date.toDate() : new Date(date));
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');

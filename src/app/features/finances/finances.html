@@ -43,13 +43,13 @@
         <mat-date-range-input [rangePicker]="rangePicker" [max]="today">
           <input
             matStartDate
-            placeholder="Start date"
+            placeholder="DD/MM/YYYY"
             [value]="startDate()"
             (dateChange)="startDate.set($event.value); onFilterChange()"
           />
           <input
             matEndDate
-            placeholder="End date"
+            placeholder="DD/MM/YYYY"
             [value]="endDate()"
             (dateChange)="endDate.set($event.value); onFilterChange()"
           />

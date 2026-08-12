@@ -9,7 +9,6 @@ import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import { PatientRecordsService } from '../../patients/patient-records.service';
 import { Prescription, Medicine } from '../../patients/patient-records.model';
 import { MedicineLibraryService, MedicineCatalogueEntry } from '../../../shared/services/medicine-library.service';
@@ -52,7 +51,6 @@ export interface PrescriptionDialogData {
     MatAutocompleteModule,
     MatDatepickerModule
   ],
-  providers: [provideNativeDateAdapter()],
   templateUrl: './record-dialog.html',
   styleUrl: './record-dialog.scss'
 })
@@ -385,7 +383,7 @@ export class RecordDialogPrescription implements OnInit {
 
   private formatDate(date: any): string {
     if (!date) return '';
-    const d = new Date(date);
+    const d = date instanceof Date ? date : (typeof date.toDate === 'function' ? date.toDate() : new Date(date));
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');

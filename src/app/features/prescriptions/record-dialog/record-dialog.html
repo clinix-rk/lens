@@ -8,11 +8,16 @@
       <mat-label>Date</mat-label>
       <input
         matInput
-        type="date"
-        [value]="prescriptionDate() | date:'yyyy-MM-dd'"
-        (change)="prescriptionDate.set($any($event.target).valueAsDate)"
-        [max]="maxDate() | date:'yyyy-MM-dd'"
+        [matDatepicker]="datePicker"
+        placeholder="DD/MM/YYYY"
+        [value]="prescriptionDate()"
+        (dateChange)="prescriptionDate.set($event.value)"
+        [max]="maxDate()"
       />
+      <mat-datepicker-toggle matSuffix [for]="datePicker">
+        <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
+      </mat-datepicker-toggle>
+      <mat-datepicker #datePicker />
       @if (!prescriptionDate()) {
         <mat-error>Date is required</mat-error>
       }

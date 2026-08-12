@@ -8,7 +8,6 @@ import { MatInput } from '@angular/material/input';
 import { MatSelect, MatOption } from '@angular/material/select';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import { PatientRecordsService } from '../patients/patient-records.service';
 import { EnrichedPayment, PaymentMethod } from '../patients/patient-records.model';
 import { RecordDialogPayment } from '../payments/record-dialog/record-dialog';
@@ -33,7 +32,6 @@ import { ConfirmationService } from '../../core/services/confirmation.service';
     MatOption,
     MatDatepickerModule
   ],
-  providers: [provideNativeDateAdapter()],
   templateUrl: './finances.html',
   styleUrl: './finances.scss',
 })
@@ -99,11 +97,13 @@ export class Finances implements OnInit {
     });
   }
 
-  formatDate(date: Date | null | undefined): string {
+  formatDate(date: Date | { toDate?: () => Date } | null | undefined): string {
     if (!date) return '';
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    // Moment adapter returns Moment objects; normalize to Date for API payloads.
+    const d = date instanceof Date ? date : date.toDate?.() ?? new Date(date as Date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
 

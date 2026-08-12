@@ -8,7 +8,6 @@ import { MatSelect, MatOption } from '@angular/material/select';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { provideNativeDateAdapter } from '@angular/material/core';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { PatientService } from '../../patient.service';
 import { PatientResponse, UpdatePatientRequest } from '../../patient.model';
@@ -33,7 +32,6 @@ import { MultiSelectWithAdd } from '../../../../shared/components/multi-select-w
     MultiSelectWithAdd,
     MatDatepickerModule
   ],
-  providers: [provideNativeDateAdapter()],
   templateUrl: './patient-info-dialog.html',
   styleUrl: './patient-info-dialog.scss'
 })
@@ -179,7 +177,7 @@ export class PatientInfoDialog implements OnInit {
 
   private formatDate(date: any): string {
     if (!date) return '';
-    const d = new Date(date);
+    const d = date instanceof Date ? date : (typeof date.toDate === 'function' ? date.toDate() : new Date(date));
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
