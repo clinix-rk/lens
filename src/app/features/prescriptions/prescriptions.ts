@@ -199,7 +199,7 @@ export class Prescriptions implements OnInit, OnDestroy {
       true
     ).subscribe((confirmed) => {
       if (confirmed) {
-        this.recordsService.deletePrescription(prescription.id).subscribe(() => {
+        this.recordsService.deletePrescription(prescription.patientId, prescription.id).subscribe(() => {
           this.loadData();
         });
       }

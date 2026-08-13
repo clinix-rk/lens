@@ -624,8 +624,8 @@ export class ApiClientService {
     });
   }
 
-  deleteSuggestionById(id: number, patientId: number): Observable<void> {
-    return this.request<void>(this.routes.deleteSuggestionById, { pathParams: { id, patientId } });
+  deleteSuggestionById(patientId: number, id: number): Observable<void> {
+    return this.request<void>(this.routes.deleteSuggestionById, { pathParams: { patientId, id } });
   }
 
   getAllPayments(

@@ -421,9 +421,8 @@ export class PatientRecordsService {
     );
   }
 
-  deleteComplain(id: number): Observable<void> {
-    // In OpenAPI, deleteComplainById requires patientId, default to 0 if not available
-    return this.api.deleteComplainById(0, id);
+  deleteComplain(patientId: number, id: number): Observable<void> {
+    return this.api.deleteComplainById(patientId, id);
   }
 
   // --- Suggestions Write Methods ---
@@ -560,8 +559,8 @@ export class PatientRecordsService {
     );
   }
 
-  deletePrescription(id: number): Observable<void> {
-    return this.api.deletePrescriptionById(0, id);
+  deletePrescription(patientId: number, id: number): Observable<void> {
+    return this.api.deletePrescriptionById(patientId, id);
   }
 
   // --- Payments Write Methods ---
@@ -586,8 +585,8 @@ export class PatientRecordsService {
     );
   }
 
-  deletePayment(id: number): Observable<void> {
-    return this.api.deletePaymentById(0, id);
+  deletePayment(patientId: number, id: number): Observable<void> {
+    return this.api.deletePaymentById(patientId, id);
   }
 
   // --- All Payments (Finances Page) ---

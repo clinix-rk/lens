@@ -196,7 +196,7 @@ export class Complains implements OnInit, OnDestroy {
       true
     ).subscribe((confirmed) => {
       if (confirmed) {
-        this.recordsService.deleteComplain(complain.id).subscribe(() => {
+        this.recordsService.deleteComplain(complain.patientId, complain.id).subscribe(() => {
           this.loadData();
         });
       }

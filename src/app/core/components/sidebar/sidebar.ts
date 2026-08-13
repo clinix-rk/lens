@@ -14,8 +14,8 @@ import { SIDEBAR_MENUS } from './sidebar.constants';
 })
 export class Sidebar {
   // Signal inputs (v17.1+)
-  collapsed = input<boolean>(false);
-  
+  collapsed = input<boolean>(true);
+
   // Signal outputs (v17.3+)
   toggleCollapse = output<void>();
 

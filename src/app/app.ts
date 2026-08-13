@@ -9,7 +9,7 @@ import { Sidebar } from "./core/components/sidebar/sidebar";
   styleUrl: './app.scss'
 })
 export class App {
-  sidebarCollapsed = signal(false);
+  sidebarCollapsed = signal(true);
 
   toggleSidebar() {
     this.sidebarCollapsed.update(collapsed => !collapsed);

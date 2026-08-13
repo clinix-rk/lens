@@ -197,7 +197,7 @@ export class Payments implements OnInit, OnDestroy {
       true
     ).subscribe((confirmed) => {
       if (confirmed) {
-        this.recordsService.deletePayment(payment.id).subscribe(() => {
+        this.recordsService.deletePayment(payment.patientId, payment.id).subscribe(() => {
           this.loadData();
         });
       }

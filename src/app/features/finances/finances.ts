@@ -169,7 +169,7 @@ export class Finances implements OnInit {
       true
     ).subscribe((confirmed) => {
       if (confirmed) {
-        this.recordsService.deletePayment(payment.id).subscribe(() => {
+        this.recordsService.deletePayment(payment.patientId, payment.id).subscribe(() => {
           this.loadPayments();
         });
       }
