@@ -74,7 +74,7 @@ export class RecordDialogPayment implements OnInit {
           amount: formVal.amount,
           method: formVal.method,
           referenceName: formVal.referenceName,
-          reciptId: this.data.payment.reciptId,
+          receiptId: this.data.payment.receiptId,
           treatmentId: this.data.payment.treatmentId,
         } as any)
         .subscribe((result) => {

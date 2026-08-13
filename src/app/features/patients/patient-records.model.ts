@@ -59,7 +59,7 @@ export type PaymentMethod = 'CASH' | 'ONLINE' | 'CHEQUE';
 export interface Payment {
   id: number;
   patientId: number;
-  reciptId?: number;
+  receiptId?: number;
   treatmentId?: number;
   treatmentDetail?: string;
   amount: number;
@@ -71,7 +71,7 @@ export interface Payment {
 }
 
 export interface EnrichedPayment extends Payment {
-  reciptId: number;
+  receiptId: number;
   treatmentId: number;
   patientName: string;
   patientCaseNo: string;

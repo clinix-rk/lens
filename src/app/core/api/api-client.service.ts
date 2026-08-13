@@ -216,7 +216,7 @@ export class ApiClientService {
     getFileByPatientId: new ApiRoute('GET', '/files/patient/{patientId}', 'getFileByPatientId'),
     downloadPdf: new ApiRoute('GET', '/files/patient/{patientId}/pdf', 'downloadPdf'),
 
-    getReceiptPdf: new ApiRoute('GET', '/finance/recipts/{id}/pdf', 'getReceiptPdf'),
+    getReceiptPdf: new ApiRoute('GET', '/finance/receipts/{id}/pdf', 'getReceiptPdf'),
     getPatientPdf: new ApiRoute('GET', '/files/patient/{patientId}/pdf', 'getPatientPdf'),
     getForm3CPdf: new ApiRoute('GET', '/finance/form3c/pdf', 'getForm3CPdf'),
   };

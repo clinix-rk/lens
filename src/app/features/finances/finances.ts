@@ -177,8 +177,8 @@ export class Finances implements OnInit {
   }
 
   onPrint(payment: EnrichedPayment) {
-    if (payment.reciptId) {
-      this.pdfService.openReceiptPdf(payment.reciptId);
+    if (payment.receiptId) {
+      this.pdfService.openReceiptPdf(payment.receiptId);
     } else {
       console.warn('No receipt ID associated with this payment:', payment);
       alert('Cannot print receipt: No receipt ID associated with this transaction.');

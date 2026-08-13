@@ -8,7 +8,7 @@ import { ApiClientService } from '../api/api-client.service';
  *
  * Three endpoints are exposed:
  *  - GET /prescriptions/{id}/pdf          — Prescription print-fill PDF
- *  - GET /finance/recipts/{id}/pdf        — Receipt PDF
+ *  - GET /finance/receipts/{id}/pdf        — Receipt PDF
  *  - GET /finance/form3c/pdf?fromDate=&toDate=[&doctorId=]  — Form 3C report PDF
  */
 @Injectable({

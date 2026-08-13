@@ -225,7 +225,7 @@ export class PatientRecordsService {
     return {
       id: res.id || 0,
       patientId: patientId,
-      reciptId: (res as any).receiptNo || (res as any).reciptId,
+      receiptId: (res as any).receiptNo || (res as any).receiptId,
       treatmentId: res.treatmentId,
       treatmentDetail: res.treatmentDetail,
       amount: res.amount || 0,
@@ -613,7 +613,7 @@ export class PatientRecordsService {
           data: {
             items: items.map(item => ({
               id: item.id || 0,
-              reciptId: (item as any).receiptNo || (item as any).reciptId || 0,
+              receiptId: (item as any).receiptNo || (item as any).receiptId || 0,
               treatmentId: item.treatmentId || 0,
               patientId: 0,
               patientName: 'Patient #' + item.id,

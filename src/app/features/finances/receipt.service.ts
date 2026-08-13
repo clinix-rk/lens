@@ -24,7 +24,7 @@ export interface CreateReceiptRequest {
 })
 export class ReceiptService {
   private http = inject(HttpClient);
-  private baseUrl = `${environment.apiBaseUrl}/finance/recipts`;
+  private baseUrl = `${environment.apiBaseUrl}/finance/receipts`;
 
   getAllReceipts(pageNo: number = 0, pageSize: number = 10): Observable<ApiResponse<PaginatedPayload<ReceiptResponse>>> {
     return this.http.get<ApiResponse<PaginatedPayload<ReceiptResponse>>>(
