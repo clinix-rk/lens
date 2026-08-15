@@ -16,6 +16,7 @@ import { DrugDosageService, DrugDosageResponse } from '../drug-dosage.service';
 import { InstructionCatalogService, InstructionCatalogResponse } from '../instruction-catalog.service';
 import { AddMedicineDialog } from '../add-medicine-dialog/add-medicine-dialog';
 import { forkJoin } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 export interface MedicineRow {
   medicineId: number | null;
@@ -79,8 +80,10 @@ export class RecordDialogPrescription implements OnInit {
     this.isEditMode.set(!!this.data.prescription);
 
     // Fetch catalog data concurrently
+    // NOTE: getAllMedicines() returns a BehaviorSubject (never completes),
+    // so we use take(1) to complete it after the first emission, allowing forkJoin to work.
     forkJoin({
-      meds: this.medicineLibrary.getAllMedicines(),
+      meds: this.medicineLibrary.getAllMedicines().pipe(take(1)),
       dosages: this.dosageService.getAllDosages(0, 1000),
       instructions: this.instructionService.getAllInstructions(0, 1000)
     }).subscribe({
@@ -152,9 +155,9 @@ export class RecordDialogPrescription implements OnInit {
     let instDisplay = m.instructions || '';
     if (instId && !instDisplay) {
       const match = this.catalogInstructions().find(i => i.id === instId);
-      if (match) instDisplay = match.instruction;
+      if (match) instDisplay = match.instruction || '';
     } else if (!instId && instDisplay) {
-      const match = this.catalogInstructions().find(i => i.instruction.toLowerCase() === instDisplay.toLowerCase().trim());
+      const match = this.catalogInstructions().find(i => (i.instruction || '').toLowerCase() === instDisplay.toLowerCase().trim());
       if (match) instId = match.id ?? null;
     }
 
@@ -236,6 +239,8 @@ export class RecordDialogPrescription implements OnInit {
     return this.catalogMedicines().filter(m => m.name.toLowerCase().includes(query));
   }
 
+  displayMedicine = (med: MedicineCatalogueEntry | null): string => med?.name || '';
+
   // --- Dosage Handlers ---
   onDosageSelected(index: number, dosageId: number) {
     const match = this.catalogDosages().find(d => d.id === dosageId);
@@ -256,7 +261,7 @@ export class RecordDialogPrescription implements OnInit {
       const row = { ...updated[index] };
       row.instructionDisplay = text;
 
-      const match = this.catalogInstructions().find(i => i.instruction.toLowerCase() === text.toLowerCase().trim());
+      const match = this.catalogInstructions().find(i => (i.instruction || '').toLowerCase() === text.toLowerCase().trim());
       if (match && match.id) {
         row.instructionId = match.id;
       } else {
@@ -267,7 +272,8 @@ export class RecordDialogPrescription implements OnInit {
     });
   }
 
-  onInstructionSelected(index: number, inst: InstructionCatalogResponse) {
+  onInstructionSelected(index: number, inst: InstructionCatalogResponse | null) {
+    if (!inst) return;
     this.medicines.update(rows => {
       const updated = [...rows];
       const row = { ...updated[index] };
@@ -310,14 +316,16 @@ export class RecordDialogPrescription implements OnInit {
     if (!row) return this.catalogInstructions();
     const query = row.instructionDisplay.toLowerCase().trim();
     if (!query) return this.catalogInstructions();
-    return this.catalogInstructions().filter(i => i.instruction.toLowerCase().includes(query));
+    return this.catalogInstructions().filter(i => (i.instruction || '').toLowerCase().includes(query));
   }
+
+  displayInstruction = (inst: InstructionCatalogResponse | null): string => inst?.instruction || '';
 
   hasExactInstructionMatch(index: number): boolean {
     const row = this.medicines()[index];
     if (!row || !row.instructionDisplay.trim()) return true;
     const query = row.instructionDisplay.toLowerCase().trim();
-    return this.catalogInstructions().some(i => i.instruction.toLowerCase() === query);
+    return this.catalogInstructions().some(i => (i.instruction || '').toLowerCase() === query);
   }
 
   hasExactMedicineMatch(index: number): boolean {

@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
@@ -8,6 +8,8 @@ import { PatientRecordsService } from '../../patients/patient-records.service';
 import { MedicineLibraryService } from '../../../shared/services/medicine-library.service';
 import { DrugDosageService } from '../drug-dosage.service';
 import { InstructionCatalogService } from '../instruction-catalog.service';
+
+import { provideNativeDateAdapter } from '@angular/material/core';
 
 describe('RecordDialogPrescription', () => {
   let component: RecordDialogPrescription;
@@ -65,6 +67,7 @@ describe('RecordDialogPrescription', () => {
     await TestBed.configureTestingModule({
       imports: [RecordDialogPrescription, NoopAnimationsModule],
       providers: [
+        provideNativeDateAdapter(),
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MAT_DIALOG_DATA, useValue: { patientId: 1 } },
         { provide: PatientRecordsService, useValue: mockRecordsService },
@@ -125,6 +128,26 @@ describe('RecordDialogPrescription', () => {
     component.onSubmit();
     expect(mockRecordsService.addPrescription).toHaveBeenCalled();
     expect(mockDialogRef.close).toHaveBeenCalled();
+  });
+
+  it('should include instructions in addPrescription payload', () => {
+    component.prescriptionDate.set(new Date('2026-06-18'));
+    component.prescriptionDetails.set('Follow for 5 days');
+    component.onMedicineSelected(0, { id: 101, name: 'Paracetamol 500mg' });
+    component.onDosageSelected(0, 201);
+    component.onInstructionSelected(0, { id: 301, instruction: 'Take once daily' });
+    component.updateQuantity(0, 2);
+
+    component.onSubmit();
+
+    expect(mockRecordsService.addPrescription).toHaveBeenCalledWith(expect.objectContaining({
+      medicines: [
+        expect.objectContaining({
+          instructionId: 301,
+          instructions: 'Take once daily'
+        })
+      ]
+    }));
   });
 
   it('should remove a medicine row', () => {

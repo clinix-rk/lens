@@ -55,7 +55,7 @@
                   [matAutocomplete]="autoMed"
                   placeholder="Search or type medicine name..."
                 />
-                <mat-autocomplete #autoMed="matAutocomplete" (optionSelected)="onMedicineSelected(i, $event.option.value)">
+                <mat-autocomplete #autoMed="matAutocomplete" [displayWith]="displayMedicine" (optionSelected)="onMedicineSelected(i, $event.option.value)">
                   @for (med of getFilteredMedicines(i); track med.id) {
                     <mat-option [value]="med">
                       {{ med.name }} <small class="type-tag">({{ med.type }})</small>
@@ -84,7 +84,7 @@
                   [matAutocomplete]="autoInst"
                   placeholder="Type or select instruction..."
                 />
-                <mat-autocomplete #autoInst="matAutocomplete" (optionSelected)="onInstructionSelected(i, $event.option.value)">
+                <mat-autocomplete #autoInst="matAutocomplete" [displayWith]="displayInstruction" (optionSelected)="onInstructionSelected(i, $event.option.value)">
                   @for (inst of getFilteredInstructions(i); track inst.id) {
                     <mat-option [value]="inst">
                       {{ inst.instruction }}

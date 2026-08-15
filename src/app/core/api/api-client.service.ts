@@ -173,17 +173,17 @@ export class ApiClientService {
       'deletePaymentById',
     ),
 
-    getAllDrugDosages: new ApiRoute('GET', '/catalog/dosages/dosages', 'getAllDrugDosages'),
-    createDrugDosage: new ApiRoute('POST', '/catalog/dosages/dosages', 'createDrugDosage'),
-    getDrugDosageById: new ApiRoute('GET', '/catalog/dosages/dosages/{id}', 'getDrugDosageById'),
+    getAllDrugDosages: new ApiRoute('GET', '/catalog/dosages', 'getAllDrugDosages'),
+    createDrugDosage: new ApiRoute('POST', '/catalog/dosages', 'createDrugDosage'),
+    getDrugDosageById: new ApiRoute('GET', '/catalog/dosages/{id}', 'getDrugDosageById'),
     updateDrugDosageById: new ApiRoute(
       'PUT',
-      '/catalog/dosages/dosages/{id}',
+      '/catalog/dosages/{id}',
       'updateDrugDosageById',
     ),
     deleteDrugDosageById: new ApiRoute(
       'DELETE',
-      '/catalog/dosages/dosages/{id}',
+      '/catalog/dosages/{id}',
       'deleteDrugDosageById',
     ),
 

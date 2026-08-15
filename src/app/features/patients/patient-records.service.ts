@@ -135,7 +135,7 @@ export class PatientRecordsService {
   private getOrCreateDosageId(dosage: string): Observable<number> {
     return this.ensureCacheLoaded().pipe(
       switchMap(() => {
-        const existing = this.dosageCache.find(d => d.dosage.toLowerCase() === dosage.toLowerCase().trim());
+        const existing = this.dosageCache.find(d => (d.dosage || '').toLowerCase() === dosage.toLowerCase().trim());
         if (existing) return of(existing.id);
 
         return this.dosageService.createDosage({ dosage }).pipe(
@@ -144,6 +144,28 @@ export class PatientRecordsService {
             this.dosageCache.push(d);
             return d.id;
           })
+        );
+      })
+    );
+  }
+
+  private getOrCreateInstructionId(instruction: string): Observable<number | undefined> {
+    const trimmed = instruction.trim();
+    if (!trimmed) return of(undefined);
+
+    return this.ensureCacheLoaded().pipe(
+      switchMap(() => {
+        const existing = this.instructionCache.find(i => (i.instruction || '').toLowerCase() === trimmed.toLowerCase());
+        if (existing) return of(existing.id);
+
+        return this.instructionCatalogService.createInstruction({ instruction: trimmed }).pipe(
+          map(res => {
+            const inst = res.data;
+            const created = { id: inst.id, instruction: inst.instruction || trimmed } as InstructionCatalogResponse;
+            this.instructionCache.push(created);
+            return inst.id;
+          }),
+          catchError(() => of(undefined))
         );
       })
     );
@@ -502,14 +524,19 @@ export class PatientRecordsService {
     const medObs = request.medicines.map(m => {
       const medId$ = m.medicineId ? of(m.medicineId) : this.getOrCreateMedicineId(request.patientId, m.name || '');
       const dosId$ = m.dosageId ? of(m.dosageId) : this.getOrCreateDosageId(m.dosage || '');
+      const instId$ = m.instructionId
+        ? of(m.instructionId)
+        : (m.instructions?.trim() ? this.getOrCreateInstructionId(m.instructions) : of(undefined));
+
       return forkJoin({
         medId: medId$,
-        dosId: dosId$
+        dosId: dosId$,
+        instId: instId$
       }).pipe(
-        map(({ medId, dosId }) => ({
+        map(({ medId, dosId, instId }) => ({
           medicineId: medId,
           dosageId: dosId,
-          ...(m.instructionId != null ? { instructionId: m.instructionId } : {}),
+          ...(instId != null ? { instructionId: instId } : {}),
           quantity: m.quantity
         }))
       );
@@ -533,14 +560,19 @@ export class PatientRecordsService {
     const medObs = request.medicines.map(m => {
       const medId$ = m.medicineId ? of(m.medicineId) : this.getOrCreateMedicineId(request.patientId, m.name || '');
       const dosId$ = m.dosageId ? of(m.dosageId) : this.getOrCreateDosageId(m.dosage || '');
+      const instId$ = m.instructionId
+        ? of(m.instructionId)
+        : (m.instructions?.trim() ? this.getOrCreateInstructionId(m.instructions) : of(undefined));
+
       return forkJoin({
         medId: medId$,
-        dosId: dosId$
+        dosId: dosId$,
+        instId: instId$
       }).pipe(
-        map(({ medId, dosId }) => ({
+        map(({ medId, dosId, instId }) => ({
           medicineId: medId,
           dosageId: dosId,
-          ...(m.instructionId != null ? { instructionId: m.instructionId } : {}),
+          ...(instId != null ? { instructionId: instId } : {}),
           quantity: m.quantity
         }))
       );
