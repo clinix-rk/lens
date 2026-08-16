@@ -8,9 +8,16 @@ export type SuggestionStatus = 'SUGGESTED' | 'ACCEPTED' | 'DECLINED';
 
 export interface PrescriptionMedicineRequest {
   medicineId: number;
-  dosageId: number;
+  dosageId?: number;
   instructionId?: number;
   quantity: number;
+}
+
+export type PrescriptionPdfReferralType = 'none' | 'standard' | 'extended';
+
+export interface PrescriptionPdfDetailsRequest {
+  doctorName: string;
+  treatmentDetail: string;
 }
 
 export interface UpdatePrescriptionRequest {
@@ -93,6 +100,8 @@ export interface UpdatePaymentRequest {
   amount: number;
   method: 'CASH' | 'ONLINE' | 'CHEQUE';
   reference?: string;
+  treatmentDetails: string;
+  receivedDate: string;
 }
 
 export interface ApiResponsePaymentResponse {
@@ -109,10 +118,11 @@ export interface PaymentResponse {
   id?: number;
   receiptNo?: string;
   treatmentId?: number;
-  treatmentDetail?: string;
+  treatmentDetails?: string;
   amount?: number;
   method?: 'CASH' | 'ONLINE' | 'CHEQUE';
   reference?: string;
+  receivedDate?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -532,6 +542,29 @@ export interface ApiResponseListPaymentResponse {
   statusCode?: number;
   message?: string;
   data?: PaymentResponse[];
+  errors?: ApiError[];
+  pagination?: PaginationMetadata;
+  timestamp?: string;
+}
+
+export interface FinanceResponse {
+  id?: number;
+  patientId?: number;
+  caseNo?: string;
+  date?: string;
+  patientName?: string;
+  treatmentDetails?: string;
+  amount?: number;
+  method?: string;
+  receivedDate?: string;
+  receiptNo?: string;
+}
+
+export interface ApiResponseListFinanceResponse {
+  success?: boolean;
+  statusCode?: number;
+  message?: string;
+  data?: FinanceResponse[];
   errors?: ApiError[];
   pagination?: PaginationMetadata;
   timestamp?: string;

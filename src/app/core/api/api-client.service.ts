@@ -33,26 +33,26 @@ export class ApiClientService {
     deleteDoctorById: new ApiRoute('DELETE', '/doctors/{id}', 'deleteDoctorById'),
     searchDoctors: new ApiRoute('GET', '/doctors/search', 'searchDoctors'),
 
-    getAllPrescriptions: new ApiRoute('GET', '/{patientId}/prescriptions', 'getAllPrescriptions'),
-    createPrescription: new ApiRoute('POST', '/{patientId}/prescriptions', 'createPrescription'),
+    getAllPrescriptions: new ApiRoute('GET', '/patients/{patientId}/prescriptions', 'getAllPrescriptions'),
+    createPrescription: new ApiRoute('POST', '/patients/{patientId}/prescriptions', 'createPrescription'),
     getPrescriptionById: new ApiRoute(
       'GET',
-      '/{patientId}/prescriptions/{id}',
+      '/patients/{patientId}/prescriptions/{id}',
       'getPrescriptionById',
     ),
     updatePrescriptionById: new ApiRoute(
       'PUT',
-      '/{patientId}/prescriptions/{id}',
+      '/patients/{patientId}/prescriptions/{id}',
       'updatePrescriptionById',
     ),
     deletePrescriptionById: new ApiRoute(
       'DELETE',
-      '/{patientId}/prescriptions/{id}',
+      '/patients/{patientId}/prescriptions/{id}',
       'deletePrescriptionById',
     ),
     getPrescriptionPdf: new ApiRoute(
-      'GET',
-      '/{patientId}/prescriptions/{id}/pdf',
+      'POST',
+      '/patients/{patientId}/prescriptions/{id}/pdf',
       'getPrescriptionPdf',
     ),
 
@@ -159,17 +159,17 @@ export class ApiClientService {
       'deleteSuggestionById',
     ),
 
-    getAllPayments: new ApiRoute('GET', '/{patientId}/finance/payments', 'getAllPayments'),
-    createPayment: new ApiRoute('POST', '/{patientId}/finance/payments', 'createPayment'),
-    getPaymentById: new ApiRoute('GET', '/{patientId}/finance/payments/{id}', 'getPaymentById'),
+    getAllPayments: new ApiRoute('GET', '/patients/{patientId}/payments', 'getAllPayments'),
+    createPayment: new ApiRoute('POST', '/patients/{patientId}/payments', 'createPayment'),
+    getPaymentById: new ApiRoute('GET', '/patients/{patientId}/payments/{id}', 'getPaymentById'),
     updatePaymentById: new ApiRoute(
       'PUT',
-      '/{patientId}/finance/payments/{id}',
+      '/patients/{patientId}/payments/{id}',
       'updatePaymentById',
     ),
     deletePaymentById: new ApiRoute(
       'DELETE',
-      '/{patientId}/finance/payments/{id}',
+      '/patients/{patientId}/payments/{id}',
       'deletePaymentById',
     ),
 
@@ -216,9 +216,15 @@ export class ApiClientService {
     getFileByPatientId: new ApiRoute('GET', '/files/patient/{patientId}', 'getFileByPatientId'),
     downloadPdf: new ApiRoute('GET', '/files/patient/{patientId}/pdf', 'downloadPdf'),
 
-    getReceiptPdf: new ApiRoute('GET', '/finance/receipts/{id}/pdf', 'getReceiptPdf'),
+    getReceiptPdf: new ApiRoute('POST', '/patients/{patientId}/payments/{id}/pdf', 'getReceiptPdf'),
     getPatientPdf: new ApiRoute('GET', '/files/patient/{patientId}/pdf', 'getPatientPdf'),
-    getForm3CPdf: new ApiRoute('GET', '/finance/form3c/pdf', 'getForm3CPdf'),
+    getFinanceForm25Pdf: new ApiRoute('GET', '/finances/form', 'getFinanceForm25Pdf'),
+    getFinanceForm25SummaryPdf: new ApiRoute(
+      'GET',
+      '/finances/form/summary',
+      'getFinanceForm25SummaryPdf',
+    ),
+    getFinances: new ApiRoute('GET', '/finances', 'getFinances'),
   };
 
   private request<T>(route: ApiRoute, options: ApiRequestOptions = {}): Observable<T> {
@@ -377,15 +383,28 @@ export class ApiClientService {
     });
   }
 
-  getPrescriptionPdf(patientId: number, id: number): Observable<Blob> {
+  getPrescriptionPdf(
+    patientId: number,
+    id: number,
+    options: {
+      referralType: T.PrescriptionPdfReferralType;
+      body?: T.PrescriptionPdfDetailsRequest;
+    },
+  ): Observable<Blob> {
     return this.request<Blob>(this.routes.getPrescriptionPdf, {
       pathParams: { patientId, id },
+      queryParams: { referralType: options.referralType },
+      ...(options.body !== undefined ? { body: options.body } : {}),
       responseType: 'blob',
     });
   }
 
-  getPrescriptionPdfUrl(patientId: number, id: number): string {
-    return this.routes.getPrescriptionPdf.buildUrl(this.baseUrl, { patientId, id });
+  getPrescriptionPdfUrl(
+    patientId: number,
+    id: number,
+    referralType: T.PrescriptionPdfReferralType = 'none',
+  ): string {
+    return this.routes.getPrescriptionPdf.buildUrl(this.baseUrl, { patientId, id }, { referralType });
   }
 
   getAllMedicines(
@@ -820,17 +839,42 @@ export class ApiClientService {
     });
   }
 
-  getReceiptPdfUrl(id: number): string {
-    return this.routes.getReceiptPdf.buildUrl(this.baseUrl, { id });
+  getReceiptPdfUrl(patientId: number, id: number): string {
+    return this.routes.getReceiptPdf.buildUrl(this.baseUrl, { patientId, id });
   }
 
   getPatientPdfUrl(patientId: number): string {
     return this.routes.getPatientPdf.buildUrl(this.baseUrl, { patientId });
   }
 
-  getForm3CPdfUrl(fromDate: string, toDate: string, doctorId?: number): string {
-    const queryParams =
-      doctorId !== undefined ? { fromDate, toDate, doctorId } : { fromDate, toDate };
-    return this.routes.getForm3CPdf.buildUrl(this.baseUrl, undefined, queryParams);
+  getFinanceForm25PdfUrl(queryParams: {
+    startDate: string;
+    endDate: string;
+    doctorId: number;
+    paymentMethod: string;
+  }): string {
+    return this.routes.getFinanceForm25Pdf.buildUrl(this.baseUrl, undefined, queryParams);
+  }
+
+  getFinanceForm25SummaryPdfUrl(queryParams: {
+    startDate: string;
+    endDate: string;
+    doctorId: number;
+    paymentMethod: string;
+  }): string {
+    return this.routes.getFinanceForm25SummaryPdf.buildUrl(this.baseUrl, undefined, queryParams);
+  }
+
+  getFinances(queryParams: {
+    startDate: string;
+    endDate: string;
+    doctorId: number;
+    paymentMethod?: string;
+    pageNo?: number;
+    pageSize?: number;
+  }): Observable<T.ApiResponseListFinanceResponse> {
+    return this.request<T.ApiResponseListFinanceResponse>(this.routes.getFinances, {
+      queryParams: queryParams as Record<string, string | number | boolean | undefined | null>,
+    });
   }
 }
