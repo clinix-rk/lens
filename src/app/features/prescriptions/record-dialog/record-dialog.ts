@@ -122,7 +122,7 @@ export class RecordDialogPrescription implements OnInit {
       dosageDisplay: '',
       instructionId: null,
       instructionDisplay: '',
-      quantity: 1
+      quantity: 0
     };
     this.medicines.update(m => [...m, newRow]);
   }
@@ -168,7 +168,7 @@ export class RecordDialogPrescription implements OnInit {
       dosageDisplay: dosDisplay,
       instructionId: instId,
       instructionDisplay: instDisplay,
-      quantity: m.quantity ?? 1
+      quantity: m.quantity
     };
 
     this.medicines.update(rows => [...rows, row]);
@@ -242,8 +242,8 @@ export class RecordDialogPrescription implements OnInit {
   displayMedicine = (med: MedicineCatalogueEntry | null): string => med?.name || '';
 
   // --- Dosage Handlers ---
-  onDosageSelected(index: number, dosageId: number) {
-    const match = this.catalogDosages().find(d => d.id === dosageId);
+  onDosageSelected(index: number, dosageId: number | null) {
+    const match = dosageId != null ? this.catalogDosages().find(d => d.id === dosageId) : undefined;
     this.medicines.update(rows => {
       const updated = [...rows];
       const row = { ...updated[index] };
@@ -352,7 +352,7 @@ export class RecordDialogPrescription implements OnInit {
 
   isFormValid(): boolean {
     if (!this.prescriptionDate()) return false;
-    return this.medicines().every(m => m.medicineId != null && m.dosageId != null && m.quantity >= 1);
+    return this.medicines().every(m => m.medicineId != null && m.quantity >= 1);
   }
 
   onSubmit() {
@@ -366,7 +366,7 @@ export class RecordDialogPrescription implements OnInit {
       details: this.prescriptionDetails(),
       medicines: this.medicines().map(m => ({
         medicineId: m.medicineId!,
-        dosageId: m.dosageId!,
+        ...(m.dosageId != null ? { dosageId: m.dosageId } : {}),
         ...(m.instructionId != null ? { instructionId: m.instructionId } : {}),
         name: m.medicineName,
         dosage: m.dosageDisplay,

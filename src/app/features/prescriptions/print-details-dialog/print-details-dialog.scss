@@ -1,0 +1,33 @@
+.dialog-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--mat-sys-on-surface, #1c1b17);
+  padding: 24px 24px 8px 24px !important;
+}
+
+.dialog-content {
+  padding: 16px 24px !important;
+
+  .form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .full-width {
+    width: 100%;
+  }
+
+  .extended-checkbox {
+    margin-top: 4px;
+  }
+}
+
+.dialog-actions {
+  padding: 8px 24px 20px !important;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}

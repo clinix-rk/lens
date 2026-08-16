@@ -100,18 +100,16 @@
 
               <!-- Dosage Select -->
               <mat-form-field class="field-dosage" appearance="outline">
-                <mat-label>Dosage</mat-label>
+                <mat-label>Dosage (Optional)</mat-label>
                 <mat-select
                   [value]="medRow.dosageId"
                   (selectionChange)="onDosageSelected(i, $event.value)"
                 >
+                  <mat-option [value]="null">None</mat-option>
                   @for (dose of catalogDosages(); track dose.id) {
                     <mat-option [value]="dose.id">{{ dose.dosage }}</mat-option>
                   }
                 </mat-select>
-                @if (medRow.dosageId === null) {
-                  <mat-error>Dosage is required</mat-error>
-                }
               </mat-form-field>
 
               <!-- Quantity Field -->

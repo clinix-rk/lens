@@ -206,7 +206,7 @@ export class Payments implements OnInit, OnDestroy {
 
   onPrint(payment: Payment) {
     if (payment.receiptId) {
-      this.pdfService.openReceiptPdf(payment.id);
+      this.pdfService.openReceiptPdf(payment.patientId, payment.id);
     } else {
       console.warn('No receipt ID associated with this payment:', payment);
       alert('Cannot print receipt: No receipt ID associated with this payment record.');

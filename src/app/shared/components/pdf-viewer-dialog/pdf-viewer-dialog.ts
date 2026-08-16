@@ -14,6 +14,8 @@ export interface PdfViewerData {
   filename: string;
   isPatientPdf: boolean;
   fileId?: number;
+  method?: 'GET' | 'POST';
+  body?: unknown;
 }
 
 @Component({
@@ -54,8 +56,17 @@ export class PdfViewerDialogComponent implements OnInit, OnDestroy {
   }
 
   private loadPdf() {
-    console.log('[PdfViewer] loadPdf called, pdfUrl=', this.data?.pdfUrl);
-    this.http.get(this.data.pdfUrl, { responseType: 'blob' }).subscribe({
+    const method = this.data.method ?? 'GET';
+    console.log('[PdfViewer] loadPdf called, method=', method, 'pdfUrl=', this.data?.pdfUrl);
+
+    const requestOptions: { responseType: 'blob'; body?: unknown } = {
+      responseType: 'blob',
+    };
+    if (this.data.body !== undefined) {
+      requestOptions.body = this.data.body;
+    }
+
+    this.http.request(method, this.data.pdfUrl, requestOptions).subscribe({
       next: (blob) => {
         console.log('[PdfViewer] received blob, size=', blob?.size);
         this.blob = blob;

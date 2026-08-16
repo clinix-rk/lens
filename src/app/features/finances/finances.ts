@@ -3,20 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIcon } from '@angular/material/icon';
 import { MatButton, MatIconButton } from '@angular/material/button';
-import { MatFormField, MatLabel, MatPrefix, MatSuffix } from '@angular/material/form-field';
-import { MatInput } from '@angular/material/input';
+import { MatFormField, MatLabel, MatSuffix } from '@angular/material/form-field';
 import { MatSelect, MatOption } from '@angular/material/select';
-import { MatDialog } from '@angular/material/dialog';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialog } from '@angular/material/dialog';
 import { PatientRecordsService } from '../patients/patient-records.service';
-import { EnrichedPayment, PaymentMethod } from '../patients/patient-records.model';
-import { RecordDialogPayment } from '../payments/record-dialog/record-dialog';
+import { FinancePaymentMethodFilter, FinanceRow, Payment, PaymentMethod } from '../patients/patient-records.model';
+import { DoctorService, Doctor } from '../doctors/doctor.service';
 import { PdfService } from '../../core/services/pdf.service';
-import { ConfirmationService } from '../../core/services/confirmation.service';
+import { RecordDialogPayment } from '../payments/record-dialog/record-dialog';
 
 @Component({
   selector: 'app-finances',
-  standalone: true,
   imports: [
     CommonModule,
     FormsModule,
@@ -25,9 +23,7 @@ import { ConfirmationService } from '../../core/services/confirmation.service';
     MatIconButton,
     MatFormField,
     MatLabel,
-    MatPrefix,
     MatSuffix,
-    MatInput,
     MatSelect,
     MatOption,
     MatDatepickerModule
@@ -37,14 +33,14 @@ import { ConfirmationService } from '../../core/services/confirmation.service';
 })
 export class Finances implements OnInit {
   private recordsService = inject(PatientRecordsService);
-  private dialog = inject(MatDialog);
+  private doctorService = inject(DoctorService);
   private pdfService = inject(PdfService);
-  private confirmationService = inject(ConfirmationService);
+  private dialog = inject(MatDialog);
 
-  // States
-  payments = signal<EnrichedPayment[]>([]);
-  searchQuery = signal<string>('');
-  selectedMethod = signal<PaymentMethod | 'ALL'>('ALL');
+  rows = signal<FinanceRow[]>([]);
+  doctors = signal<Doctor[]>([]);
+  selectedDoctorId = signal<number | null>(null);
+  selectedMethod = signal<FinancePaymentMethodFilter>('ALL');
   startDate = signal<Date | null>(null);
   endDate = signal<Date | null>(null);
   today = new Date();
@@ -57,7 +53,7 @@ export class Finances implements OnInit {
   isLoading = signal<boolean>(false);
 
   pageSizes = [10, 25, 50, 100];
-  methods: (PaymentMethod | 'ALL')[] = ['ALL', 'CASH', 'ONLINE', 'CHEQUE'];
+  methods: FinancePaymentMethodFilter[] = ['ALL', 'CASH', 'ONLINE', 'CHEQUE'];
 
   get showingStart(): number {
     if (this.totalElements() === 0) return 0;
@@ -69,22 +65,45 @@ export class Finances implements OnInit {
   }
 
   ngOnInit() {
-    this.loadPayments();
+    this.doctorService.getDoctors().subscribe({
+      next: (list) => this.doctors.set(list),
+      error: (err) => console.error('Failed to load doctors', err),
+    });
   }
 
-  loadPayments() {
+  canLoadFilters(): boolean {
+    return this.selectedDoctorId() != null && !!this.startDate() && !!this.endDate();
+  }
+
+  loadFinances() {
+    if (!this.canLoadFilters()) {
+      this.rows.set([]);
+      this.totalPages.set(1);
+      this.totalElements.set(0);
+      this.isLast.set(true);
+      this.isLoading.set(false);
+      return;
+    }
+
+    const doctorId = this.selectedDoctorId()!;
+    const start = this.formatDate(this.startDate());
+    const end = this.formatDate(this.endDate());
+    if (!start || !end) {
+      return;
+    }
+
     this.isLoading.set(true);
-    this.recordsService.getAllPayments(
+    this.recordsService.getFinances(
       this.currentPage(),
       this.pageSize(),
-      this.searchQuery().trim(),
-      this.selectedMethod(),
-      this.formatDate(this.startDate()) || undefined,
-      this.formatDate(this.endDate()) || undefined
+      start,
+      end,
+      doctorId,
+      this.selectedMethod()
     ).subscribe({
       next: (wrapper) => {
         const data = wrapper.data;
-        this.payments.set(data.items);
+        this.rows.set(data.items);
         this.totalPages.set(data.totalPages);
         this.totalElements.set(data.totalElements);
         this.isLast.set(data.isLast);
@@ -108,29 +127,33 @@ export class Finances implements OnInit {
   }
 
   resetFilters() {
-    this.searchQuery.set('');
+    this.selectedDoctorId.set(null);
     this.selectedMethod.set('ALL');
     this.startDate.set(null);
     this.endDate.set(null);
-    this.onFilterChange();
+    this.currentPage.set(1);
+    this.rows.set([]);
+    this.totalPages.set(1);
+    this.totalElements.set(0);
+    this.isLast.set(true);
   }
 
   onFilterChange() {
     this.currentPage.set(1);
-    this.loadPayments();
+    this.loadFinances();
   }
 
   onPageSizeChange(event: Event) {
     const size = parseInt((event.target as HTMLSelectElement).value, 10);
     this.pageSize.set(size);
     this.currentPage.set(1);
-    this.loadPayments();
+    this.loadFinances();
   }
 
   goToPage(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
-    this.loadPayments();
+    this.loadFinances();
   }
 
   goToFirstPage() {
@@ -149,50 +172,78 @@ export class Finances implements OnInit {
     this.goToPage(this.currentPage() - 1);
   }
 
-  onEdit(payment: EnrichedPayment) {
+  trackRow(index: number, row: FinanceRow): string {
+    return `${row.id}|${row.receiptNo}|${row.caseNo}|${index}`;
+  }
+
+  onEdit(row: FinanceRow) {
+    if (!row.id || !row.patientId) {
+      console.warn('Cannot edit payment: missing id or patientId on finance row', row);
+      return;
+    }
+
+    const payment: Payment = {
+      id: row.id,
+      patientId: row.patientId,
+      amount: row.amount,
+      method: (row.method as PaymentMethod) || 'CASH',
+      referenceName: '',
+      date: row.date,
+      treatmentDetails: row.treatmentDetails,
+      receivedDate: row.receivedDate,
+      createdAt: '',
+      updatedAt: '',
+    };
+
     const dialogRef = this.dialog.open(RecordDialogPayment, {
       width: '480px',
-      data: { patientId: payment.patientId, payment }
+      data: { patientId: row.patientId, payment },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
-        this.loadPayments();
+        this.loadFinances();
       }
     });
   }
 
-  onDelete(payment: EnrichedPayment) {
-    this.confirmationService.confirm(
-      `Delete this payment receipt (#${payment.id}) for ${payment.patientName}? This cannot be undone.`,
-      'Delete Payment Receipt',
-      true
-    ).subscribe((confirmed) => {
-      if (confirmed) {
-        this.recordsService.deletePayment(payment.patientId, payment.id).subscribe(() => {
-          this.loadPayments();
-        });
-      }
-    });
-  }
-
-  onPrint(payment: EnrichedPayment) {
-    if (payment.receiptId) {
-      this.pdfService.openReceiptPdf(payment.receiptId);
-    } else {
-      console.warn('No receipt ID associated with this payment:', payment);
-      alert('Cannot print receipt: No receipt ID associated with this transaction.');
+  onGenerateForm25() {
+    const params = this.getFinanceFormParams();
+    if (!params) {
+      return;
     }
+    this.pdfService.openFinanceForm25Pdf(params);
   }
 
-  onExportForm3C() {
-    const start = this.startDate()
-      ? this.formatDate(this.startDate())
-      : this.formatDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
-    const end = this.endDate()
-      ? this.formatDate(this.endDate())
-      : this.formatDate(new Date());
+  onGenerateSummary() {
+    const params = this.getFinanceFormParams();
+    if (!params) {
+      return;
+    }
+    this.pdfService.openFinanceForm25SummaryPdf(params);
+  }
 
-    this.pdfService.downloadForm3C(start, end);
+  private getFinanceFormParams(): {
+    startDate: string;
+    endDate: string;
+    doctorId: number;
+    paymentMethod: string;
+  } | null {
+    if (!this.canLoadFilters()) {
+      return null;
+    }
+
+    const startDate = this.formatDate(this.startDate());
+    const endDate = this.formatDate(this.endDate());
+    if (!startDate || !endDate) {
+      return null;
+    }
+
+    return {
+      startDate,
+      endDate,
+      doctorId: this.selectedDoctorId()!,
+      paymentMethod: this.selectedMethod(),
+    };
   }
 }

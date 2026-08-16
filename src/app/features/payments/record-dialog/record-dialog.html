@@ -47,6 +47,38 @@
         placeholder="e.g. Transaction ID, Cheque No."
       />
     </mat-form-field>
+
+    @if (isEditMode) {
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Treatment Details</mat-label>
+        <input
+          matInput
+          formControlName="treatmentDetails"
+          placeholder="Treatment given"
+        />
+        @if (paymentForm.get('treatmentDetails')?.hasError('required')) {
+          <mat-error>Treatment details are required</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="full-width" appearance="outline">
+        <mat-label>Received Date</mat-label>
+        <input
+          matInput
+          [matDatepicker]="receivedDatePicker"
+          formControlName="receivedDate"
+          [max]="maxDate"
+          placeholder="DD/MM/YYYY"
+        />
+        <mat-datepicker-toggle matSuffix [for]="receivedDatePicker">
+          <mat-icon matDatepickerToggleIcon>calendar_today</mat-icon>
+        </mat-datepicker-toggle>
+        <mat-datepicker #receivedDatePicker />
+        @if (paymentForm.get('receivedDate')?.hasError('required')) {
+          <mat-error>Received date is required</mat-error>
+        }
+      </mat-form-field>
+    }
   </form>
 </mat-dialog-content>
 

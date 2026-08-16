@@ -10,10 +10,26 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+
     h1 {
       margin: 0;
       color: var(--mat-sys-on-background);
       font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .export-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
   }
 
@@ -22,41 +38,9 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
     gap: 16px;
     margin-top: 8px;
     margin-bottom: 8px;
-
-    .search-wrapper {
-      flex: 1;
-      min-width: 280px;
-      max-width: 450px;
-      
-      .search-field {
-        width: 100%;
-
-        ::v-deep .mat-mdc-text-field-wrapper {
-          height: 48px;
-          border-radius: 24px !important;
-          background-color: var(--mat-sys-surface);
-        }
-
-        ::v-deep .mat-mdc-form-field-flex {
-          align-items: center !important;
-          padding-top: 0 !important;
-        }
-
-        ::v-deep .mat-mdc-form-field-infix {
-          padding-top: 12px !important;
-          padding-bottom: 12px !important;
-        }
-
-        .search-icon {
-          color: var(--mat-sys-on-surface-variant);
-          margin-right: 8px;
-        }
-      }
-    }
 
     .filter-controls {
       display: flex;
@@ -66,6 +50,10 @@
 
       .filter-field {
         width: 160px;
+
+        &.doctor-field {
+          width: 220px;
+        }
 
         ::v-deep .mat-mdc-text-field-wrapper {
           height: 48px;
@@ -206,6 +194,15 @@
           font-size: 16px;
         }
 
+        .treatment-details {
+          font-size: 14px;
+          color: var(--mat-sys-on-surface-variant);
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
         // Custom badges for payment methods
         .method-badge {
           padding: 4px 10px;
@@ -292,23 +289,31 @@
   }
 
   // Column width rules to ensure table-like alignment
-  .col-receipt {
-    flex: 0 0 120px;
+  .col-case {
+    flex: 0 0 110px;
   }
   .col-date {
-    flex: 0 0 150px;
-  }
-  .col-amount {
-    flex: 0 0 140px;
-  }
-  .col-method {
-    flex: 0 0 140px;
-  }
-  .col-case {
     flex: 0 0 120px;
   }
   .col-name {
-    flex: 1 1 200px;
+    flex: 1 1 160px;
+    min-width: 120px;
+  }
+  .col-treatment-given {
+    flex: 1 1 180px;
+    min-width: 120px;
+  }
+  .col-amount {
+    flex: 0 0 120px;
+  }
+  .col-method {
+    flex: 0 0 120px;
+  }
+  .col-received-date {
+    flex: 0 0 130px;
+  }
+  .col-receipt {
+    flex: 0 0 120px;
   }
   .col-actions {
     flex: 0 0 100px;

@@ -10,6 +10,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { PatientRecordsService } from '../patients/patient-records.service';
 import { Prescription } from '../patients/patient-records.model';
 import { RecordDialogPrescription } from './record-dialog/record-dialog';
+import {
+  PrintDetailsDialog,
+  PrescriptionPrintDetailsResult,
+} from './print-details-dialog/print-details-dialog';
 import { PdfService } from '../../core/services/pdf.service';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -212,6 +216,16 @@ export class Prescriptions implements OnInit, OnDestroy {
       return;
     }
 
-    this.pdfService.openPrescriptionPdf(patientId, prescription.id);
+    const dialogRef = this.dialog.open(PrintDetailsDialog, {
+      width: '480px',
+    });
+
+    dialogRef.afterClosed().subscribe((result: PrescriptionPrintDetailsResult | null | undefined) => {
+      if (!result) {
+        return;
+      }
+
+      this.pdfService.openPrescriptionPdf(patientId, prescription.id, result);
+    });
   }
 }

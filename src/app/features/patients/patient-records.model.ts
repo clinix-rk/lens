@@ -39,7 +39,7 @@ export interface Medicine {
   dosageId?: number;
   instructionId?: number;
   name: string;
-  dosage: string;
+  dosage?: string;
   instructions: string;
   quantity: number;
 }
@@ -55,17 +55,19 @@ export interface Prescription {
 }
 
 export type PaymentMethod = 'CASH' | 'ONLINE' | 'CHEQUE';
+export type FinancePaymentMethodFilter = PaymentMethod | 'ALL';
 
 export interface Payment {
   id: number;
   patientId: number;
   receiptId?: number;
   treatmentId?: number;
-  treatmentDetail?: string;
+  treatmentDetails?: string;
   amount: number;
   method: PaymentMethod;
   referenceName: string;
   date: string; // YYYY-MM-DD
+  receivedDate?: string; // YYYY-MM-DD
   createdAt: string;
   updatedAt: string;
 }
@@ -75,6 +77,20 @@ export interface EnrichedPayment extends Payment {
   treatmentId: number;
   patientName: string;
   patientCaseNo: string;
+}
+
+/** View model for the Finances page (`GET /finances`). */
+export interface FinanceRow {
+  id: number;
+  patientId: number;
+  caseNo: string;
+  date: string;
+  patientName: string;
+  treatmentDetails: string;
+  amount: number;
+  method: PaymentMethod | string;
+  receivedDate: string;
+  receiptNo: string;
 }
 
 // Reusable Paginated Wrapper following the API structure of the application
@@ -152,6 +168,8 @@ export interface CreatePaymentRequest {
   amount: number;
   method: PaymentMethod;
   referenceName: string;
+  treatmentDetails?: string;
+  receivedDate?: string;
 }
 export interface UpdatePaymentRequest extends CreatePaymentRequest { id: number; }
 

@@ -2,10 +2,12 @@ import { Component, inject, OnInit } from '@angular/core';
 
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatFormField, MatLabel, MatError, MatPrefix } from '@angular/material/form-field';
+import { MatFormField, MatLabel, MatError, MatPrefix, MatSuffix } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatSelect, MatOption } from '@angular/material/select';
 import { MatButton } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatIcon } from '@angular/material/icon';
 import { PatientRecordsService } from '../../patients/patient-records.service';
 import { Payment, PaymentMethod } from '../../patients/patient-records.model';
 
@@ -24,10 +26,13 @@ export interface PaymentDialogData {
     MatLabel,
     MatError,
     MatPrefix,
+    MatSuffix,
     MatInput,
     MatSelect,
     MatOption,
     MatButton,
+    MatIcon,
+    MatDatepickerModule,
   ],
   templateUrl: './record-dialog.html',
   styleUrl: './record-dialog.scss',
@@ -40,6 +45,7 @@ export class RecordDialogPayment implements OnInit {
 
   paymentForm!: FormGroup;
   isEditMode = false;
+  maxDate = new Date();
 
   methods: PaymentMethod[] = ['CASH', 'ONLINE', 'CHEQUE'];
 
@@ -56,6 +62,14 @@ export class RecordDialogPayment implements OnInit {
       referenceName: [
         payment?.referenceName || '',
         [Validators.maxLength(100)],
+      ],
+      treatmentDetails: [
+        payment?.treatmentDetails || '',
+        this.isEditMode ? [Validators.required] : [],
+      ],
+      receivedDate: [
+        payment?.receivedDate ? new Date(payment.receivedDate) : (this.isEditMode ? new Date() : null),
+        this.isEditMode ? [Validators.required] : [],
       ],
     });
   }
@@ -74,6 +88,8 @@ export class RecordDialogPayment implements OnInit {
           amount: formVal.amount,
           method: formVal.method,
           referenceName: formVal.referenceName,
+          treatmentDetails: formVal.treatmentDetails,
+          receivedDate: this.formatDate(formVal.receivedDate),
           receiptId: this.data.payment.receiptId,
           treatmentId: this.data.payment.treatmentId,
         } as any)
@@ -97,7 +113,7 @@ export class RecordDialogPayment implements OnInit {
 
   private formatDate(date: any): string {
     if (!date) return '';
-    const d = new Date(date);
+    const d = date instanceof Date ? date : (typeof date.toDate === 'function' ? date.toDate() : new Date(date));
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');

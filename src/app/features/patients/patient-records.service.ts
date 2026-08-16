@@ -8,7 +8,8 @@ import {
   Treatment,
   Prescription,
   Payment,
-  EnrichedPayment,
+  FinancePaymentMethodFilter,
+  FinanceRow,
   PaymentMethod,
   SuggestionStatus,
   PaginatedResponseWrapper,
@@ -132,18 +133,23 @@ export class PatientRecordsService {
     );
   }
 
-  private getOrCreateDosageId(dosage: string): Observable<number> {
+  private getOrCreateDosageId(dosage: string): Observable<number | undefined> {
+    const trimmed = dosage.trim();
+    if (!trimmed) return of(undefined);
+
     return this.ensureCacheLoaded().pipe(
       switchMap(() => {
-        const existing = this.dosageCache.find(d => (d.dosage || '').toLowerCase() === dosage.toLowerCase().trim());
+        const existing = this.dosageCache.find(d => (d.dosage || '').toLowerCase() === trimmed.toLowerCase());
         if (existing) return of(existing.id);
 
-        return this.dosageService.createDosage({ dosage }).pipe(
+        return this.dosageService.createDosage({ dosage: trimmed }).pipe(
           map(res => {
             const d = res.data;
-            this.dosageCache.push(d);
+            const created = { id: d.id, dosage: d.dosage || trimmed } as DrugDosageResponse;
+            this.dosageCache.push(created);
             return d.id;
-          })
+          }),
+          catchError(() => of(undefined))
         );
       })
     );
@@ -218,7 +224,7 @@ export class PatientRecordsService {
   private mapPrescriptionResponse(res: PrescriptionResponse): Prescription {
     const medicines = (res.medicines || []).map(m => {
       const med = this.medicineLibrary.getAll().find(entry => entry.id === m.medicineId);
-      const dos = this.dosageCache.find(d => d.id === m.dosageId);
+      const dos = m.dosageId ? this.dosageCache.find(d => d.id === m.dosageId) : undefined;
       const inst = m.instructionId ? this.instructionCache.find(i => i.id === m.instructionId) : undefined;
       return {
         id: m.id,
@@ -226,7 +232,7 @@ export class PatientRecordsService {
         dosageId: m.dosageId,
         instructionId: m.instructionId,
         name: med ? med.name : 'Unknown Medicine',
-        dosage: dos ? dos.dosage : '1-0-1',
+        dosage: dos ? dos.dosage : '',
         instructions: inst ? inst.instruction : (med ? (med.defaultInstructions || '') : ''),
         quantity: m.quantity || 1
       };
@@ -249,11 +255,12 @@ export class PatientRecordsService {
       patientId: patientId,
       receiptId: (res as any).receiptNo || (res as any).receiptId,
       treatmentId: res.treatmentId,
-      treatmentDetail: res.treatmentDetail,
+      treatmentDetails: res.treatmentDetails || '',
       amount: res.amount || 0,
       method: (res.method as PaymentMethod) || 'CASH',
       referenceName: res.reference || '',
-      date: res.createdAt ? res.createdAt.split('T')[0] : '',
+      date: (res as any).date || (res.createdAt ? res.createdAt.split('T')[0] : ''),
+      receivedDate: (res as any).receivedDate || '',
       createdAt: res.createdAt || '',
       updatedAt: res.updatedAt || ''
     };
@@ -523,7 +530,9 @@ export class PatientRecordsService {
   addPrescription(request: CreatePrescriptionRequest): Observable<Prescription> {
     const medObs = request.medicines.map(m => {
       const medId$ = m.medicineId ? of(m.medicineId) : this.getOrCreateMedicineId(request.patientId, m.name || '');
-      const dosId$ = m.dosageId ? of(m.dosageId) : this.getOrCreateDosageId(m.dosage || '');
+      const dosId$ = m.dosageId
+        ? of(m.dosageId)
+        : (m.dosage?.trim() ? this.getOrCreateDosageId(m.dosage) : of(undefined));
       const instId$ = m.instructionId
         ? of(m.instructionId)
         : (m.instructions?.trim() ? this.getOrCreateInstructionId(m.instructions) : of(undefined));
@@ -535,7 +544,7 @@ export class PatientRecordsService {
       }).pipe(
         map(({ medId, dosId, instId }) => ({
           medicineId: medId,
-          dosageId: dosId,
+          ...(dosId != null ? { dosageId: dosId } : {}),
           ...(instId != null ? { instructionId: instId } : {}),
           quantity: m.quantity
         }))
@@ -559,7 +568,9 @@ export class PatientRecordsService {
   updatePrescription(request: UpdatePrescriptionRequest): Observable<Prescription> {
     const medObs = request.medicines.map(m => {
       const medId$ = m.medicineId ? of(m.medicineId) : this.getOrCreateMedicineId(request.patientId, m.name || '');
-      const dosId$ = m.dosageId ? of(m.dosageId) : this.getOrCreateDosageId(m.dosage || '');
+      const dosId$ = m.dosageId
+        ? of(m.dosageId)
+        : (m.dosage?.trim() ? this.getOrCreateDosageId(m.dosage) : of(undefined));
       const instId$ = m.instructionId
         ? of(m.instructionId)
         : (m.instructions?.trim() ? this.getOrCreateInstructionId(m.instructions) : of(undefined));
@@ -571,7 +582,7 @@ export class PatientRecordsService {
       }).pipe(
         map(({ medId, dosId, instId }) => ({
           medicineId: medId,
-          dosageId: dosId,
+          ...(dosId != null ? { dosageId: dosId } : {}),
           ...(instId != null ? { instructionId: instId } : {}),
           quantity: m.quantity
         }))
@@ -611,7 +622,9 @@ export class PatientRecordsService {
     return this.api.updatePaymentById(request.patientId, request.id, {
       amount: request.amount,
       method: request.method,
-      reference: request.referenceName
+      reference: request.referenceName,
+      treatmentDetails: request.treatmentDetails || '',
+      receivedDate: request.receivedDate || '',
     }).pipe(
       map(res => this.mapPaymentResponse(res.data || {} as any, request.patientId))
     );
@@ -621,18 +634,35 @@ export class PatientRecordsService {
     return this.api.deletePaymentById(patientId, id);
   }
 
-  // --- All Payments (Finances Page) ---
-  getAllPayments(
+  // --- Finances Page ---
+  getFinances(
     pageNo: number = 1,
     pageSize: number = 10,
-    searchQuery?: string,
-    method?: PaymentMethod | 'ALL',
-    fromDate?: string,
-    toDate?: string
-  ): Observable<PaginatedResponseWrapper<EnrichedPayment>> {
+    startDate: string,
+    endDate: string,
+    doctorId: number,
+    paymentMethod?: FinancePaymentMethodFilter
+  ): Observable<PaginatedResponseWrapper<FinanceRow>> {
     const pageIndex = Math.max(0, pageNo - 1);
-    // Use patientId 0 as wildcard / catalog call for overall finances
-    return this.api.getAllPayments(0, { pageNo: pageIndex, pageSize }).pipe(
+    const queryParams: {
+      startDate: string;
+      endDate: string;
+      doctorId: number;
+      paymentMethod?: string;
+      pageNo: number;
+      pageSize: number;
+    } = {
+      startDate,
+      endDate,
+      doctorId,
+      pageNo: pageIndex,
+      pageSize,
+    };
+    if (paymentMethod) {
+      queryParams.paymentMethod = paymentMethod === 'ALL' ? 'all' : paymentMethod;
+    }
+
+    return this.api.getFinances(queryParams).pipe(
       map(res => {
         const items = res.data || [];
         const meta = res.pagination;
@@ -643,18 +673,16 @@ export class PatientRecordsService {
           meta: { timestamp: res.timestamp || new Date().toISOString() },
           data: {
             items: items.map(item => ({
-              id: item.id || 0,
-              receiptId: (item as any).receiptNo || (item as any).receiptId || 0,
-              treatmentId: item.treatmentId || 0,
-              patientId: 0,
-              patientName: 'Patient #' + item.id,
-              patientCaseNo: '',
-              amount: item.amount || 0,
-              method: (item.method as PaymentMethod) || 'CASH',
-              referenceName: item.reference || '',
-              date: item.createdAt ? item.createdAt.split('T')[0] : '',
-              createdAt: item.createdAt || '',
-              updatedAt: item.updatedAt || ''
+              id: item.id ?? 0,
+              patientId: item.patientId ?? 0,
+              caseNo: item.caseNo || '',
+              date: item.date || '',
+              patientName: item.patientName || '',
+              treatmentDetails: item.treatmentDetails || '',
+              amount: item.amount ?? 0,
+              method: item.method || '',
+              receivedDate: item.receivedDate || '',
+              receiptNo: item.receiptNo || '',
             })),
             pageNumber: meta?.page ?? pageIndex,
             pageSize: meta?.pageSize ?? pageSize,

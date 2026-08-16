@@ -1,30 +1,46 @@
 <div class="finances-page-container">
   <div class="header-section">
     <h1 class="title-large Montserrat-font">Finances</h1>
-    <button mat-raised-button color="primary" class="export-btn hover-lift" (click)="onExportForm3C()">
-      <mat-icon>picture_as_pdf</mat-icon>
-      Export Form 3C
-    </button>
+    <div class="header-actions">
+      <button
+        mat-raised-button
+        color="primary"
+        class="export-btn hover-lift"
+        [disabled]="!canLoadFilters()"
+        (click)="onGenerateForm25()"
+      >
+        <mat-icon>picture_as_pdf</mat-icon>
+        Generate Form 25
+      </button>
+      <button
+        mat-stroked-button
+        color="primary"
+        class="export-btn hover-lift"
+        [disabled]="!canLoadFilters()"
+        (click)="onGenerateSummary()"
+      >
+        <mat-icon>summarize</mat-icon>
+        Generate Summary
+      </button>
+    </div>
   </div>
 
-  <!-- Row 2: Filters -->
+  <!-- Filters -->
   <div class="filters-row">
-    <div class="search-wrapper">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search Transactions</mat-label>
-        <mat-icon matPrefix class="search-icon">search</mat-icon>
-        <input
-          matInput
-          type="text"
-          placeholder="Search by receipt no, patient name, case no..."
-          [ngModel]="searchQuery()"
-          (ngModelChange)="searchQuery.set($event); onFilterChange()"
-        />
-      </mat-form-field>
-    </div>
-
     <div class="filter-controls">
-      <!-- Method Selector -->
+      <mat-form-field appearance="outline" class="filter-field doctor-field">
+        <mat-label>Doctor</mat-label>
+        <mat-select
+          [ngModel]="selectedDoctorId()"
+          (ngModelChange)="selectedDoctorId.set($event); onFilterChange()"
+          required
+        >
+          @for (doctor of doctors(); track doctor.id) {
+            <mat-option [value]="doctor.id">{{ doctor.name }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
       <mat-form-field appearance="outline" class="filter-field">
         <mat-label>Payment Method</mat-label>
         <mat-select
@@ -37,7 +53,6 @@
         </mat-select>
       </mat-form-field>
 
-      <!-- Date Range Picker -->
       <mat-form-field appearance="outline" class="filter-field date-range-field">
         <mat-label>Date Range</mat-label>
         <mat-date-range-input [rangePicker]="rangePicker" [max]="today">
@@ -59,8 +74,8 @@
         </mat-datepicker-toggle>
         <mat-date-range-picker #rangePicker />
       </mat-form-field>
-      <!-- Reset Filters Button -->
-      @if (searchQuery() || selectedMethod() !== 'ALL' || startDate() || endDate()) {
+
+      @if (selectedDoctorId() !== null || selectedMethod() !== 'ALL' || startDate() || endDate()) {
         <button mat-button color="warn" class="reset-btn" (click)="resetFilters()">
           <mat-icon>clear</mat-icon>
           Reset
@@ -72,12 +87,14 @@
   <!-- Finances Table -->
   <div class="finances-table-container">
     <div class="finances-table-header">
-      <div class="col-receipt">Receipt No</div>
+      <div class="col-case">Case No</div>
       <div class="col-date">Date</div>
+      <div class="col-name">Patient Name</div>
+      <div class="col-treatment-given">Treatment Given</div>
       <div class="col-amount">Amount</div>
       <div class="col-method">Method</div>
-      <div class="col-case">Case No</div>
-      <div class="col-name">Patient Name</div>
+      <div class="col-received-date">Received Date</div>
+      <div class="col-receipt">Receipt No</div>
       <div class="col-actions">Actions</div>
     </div>
 
@@ -86,56 +103,51 @@
         <div class="table-loading">
           <span class="body-medium text-secondary">Retrieving financial records...</span>
         </div>
+      } @else if (!canLoadFilters()) {
+        <div class="table-empty">
+          <mat-icon class="empty-icon">filter_alt</mat-icon>
+          <h3 class="title-medium">Select filters to load transactions</h3>
+          <p class="body-medium text-secondary">Choose a doctor and date range to view finances.</p>
+        </div>
       } @else {
-        @for (payment of payments(); track payment.id) {
+        @for (row of rows(); track trackRow($index, row)) {
           <div class="finance-card-row hover-lift">
-            <div class="col-receipt">
-              <span class="receipt-badge">#{{ payment.id }}</span>
+            <div class="col-case">
+              <span class="case-badge">{{ row.caseNo }}</span>
             </div>
             <div class="col-date">
-              <span class="payment-date">{{ payment.date | date: 'dd MMM yyyy' }}</span>
+              <span class="payment-date">{{ row.date | date: 'dd MMM yyyy' }}</span>
+            </div>
+            <div class="col-name">
+              <span class="patient-name Montserrat-font">{{ row.patientName }}</span>
+            </div>
+            <div class="col-treatment-given">
+              <span class="treatment-details">{{ row.treatmentDetails }}</span>
             </div>
             <div class="col-amount">
               <span class="payment-amount Montserrat-font"
-                >₹{{ payment.amount | number: '1.2-2' }}</span
+                >₹{{ row.amount | number: '1.2-2' }}</span
               >
             </div>
             <div class="col-method">
-              <span class="method-badge badge-{{ payment.method.toLowerCase() }}">{{
-                payment.method
+              <span class="method-badge badge-{{ row.method.toLowerCase() }}">{{
+                row.method
               }}</span>
             </div>
-            <div class="col-case">
-              <span class="case-badge">{{ payment.patientCaseNo }}</span>
+            <div class="col-received-date">
+              <span class="payment-date">{{ row.receivedDate | date: 'dd MMM yyyy' }}</span>
             </div>
-            <div class="col-name">
-              <span class="patient-name Montserrat-font">{{ payment.patientName }}</span>
+            <div class="col-receipt">
+              <span class="receipt-badge">{{ row.receiptNo }}</span>
             </div>
             <div class="col-actions" (click)="$event.stopPropagation()">
               <button
                 mat-icon-button
-                class="action-btn print-btn"
-                aria-label="Print receipt"
-                (click)="onPrint(payment)"
-                matTooltip="Print Receipt"
-              >
-                <mat-icon>print</mat-icon>
-              </button>
-              <button
-                mat-icon-button
                 class="action-btn edit-btn"
                 aria-label="Edit payment"
-                (click)="onEdit(payment)"
+                (click)="onEdit(row)"
               >
                 <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                class="action-btn delete-btn"
-                aria-label="Delete payment"
-                (click)="onDelete(payment)"
-              >
-                <mat-icon>delete</mat-icon>
               </button>
             </div>
           </div>
@@ -143,7 +155,7 @@
           <div class="table-empty">
             <mat-icon class="empty-icon">search_off</mat-icon>
             <h3 class="title-medium">No transactions found</h3>
-            <p class="body-medium text-secondary">Try updating your filters or search terms.</p>
+            <p class="body-medium text-secondary">Try updating your filters.</p>
           </div>
         }
       }
@@ -171,7 +183,7 @@
       <button
         mat-icon-button
         (click)="goToFirstPage()"
-        [disabled]="currentPage() === 1 || isLoading()"
+        [disabled]="currentPage() === 1 || isLoading() || !canLoadFilters()"
         aria-label="First page"
       >
         <mat-icon>first_page</mat-icon>
@@ -179,7 +191,7 @@
       <button
         mat-icon-button
         (click)="goToPreviousPage()"
-        [disabled]="currentPage() === 1 || isLoading()"
+        [disabled]="currentPage() === 1 || isLoading() || !canLoadFilters()"
         aria-label="Previous page"
       >
         <mat-icon>chevron_left</mat-icon>
@@ -192,7 +204,7 @@
       <button
         mat-icon-button
         (click)="goToNextPage()"
-        [disabled]="currentPage() === totalPages() || isLoading()"
+        [disabled]="currentPage() === totalPages() || isLoading() || !canLoadFilters()"
         aria-label="Next page"
       >
         <mat-icon>chevron_right</mat-icon>
@@ -200,7 +212,7 @@
       <button
         mat-icon-button
         (click)="goToLastPage()"
-        [disabled]="currentPage() === totalPages() || isLoading()"
+        [disabled]="currentPage() === totalPages() || isLoading() || !canLoadFilters()"
         aria-label="Last page"
       >
         <mat-icon>last_page</mat-icon>

@@ -150,6 +150,28 @@ describe('RecordDialogPrescription', () => {
     }));
   });
 
+  it('should validate form and submit without dosage', () => {
+    component.prescriptionDate.set(new Date('2026-06-18'));
+    component.prescriptionDetails.set('Follow for 5 days');
+    component.onMedicineSelected(0, { id: 101, name: 'Paracetamol 500mg' });
+    component.updateQuantity(0, 1);
+
+    expect(component.isFormValid()).toBe(true);
+
+    component.onSubmit();
+
+    expect(mockRecordsService.addPrescription).toHaveBeenCalledWith(expect.objectContaining({
+      medicines: [
+        expect.objectContaining({
+          medicineId: 101,
+          quantity: 1
+        })
+      ]
+    }));
+    const submittedMedicine = mockRecordsService.addPrescription.mock.calls[0][0].medicines[0];
+    expect(submittedMedicine.dosageId).toBeUndefined();
+  });
+
   it('should remove a medicine row', () => {
     component.addMedicineRow();
     expect(component.medicines().length).toBe(2);
