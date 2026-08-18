@@ -13,6 +13,7 @@ import { PdfService } from '../../core/services/pdf.service';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ConfirmationService } from '../../core/services/confirmation.service';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
   selector: 'app-payments',
@@ -25,10 +26,11 @@ import { ConfirmationService } from '../../core/services/confirmation.service';
     MatFormField,
     MatLabel,
     MatPrefix,
-    MatInput
+    MatInput,
+    MatTooltip,
   ],
   templateUrl: './payments.html',
-  styleUrl: './payments.scss'
+  styleUrl: './payments.scss',
 })
 export class Payments implements OnInit, OnDestroy {
   private recordsService = inject(PatientRecordsService);
@@ -56,24 +58,26 @@ export class Payments implements OnInit, OnDestroy {
 
   constructor() {
     // Reactively reload when patientId, searchQuery, currentPage, or pageSize changes
-    effect(() => {
-      const id = this.patientId();
-      if (id !== null && id !== undefined) {
-        this.loadData();
-      } else {
-        this.items.set([]);
-      }
-    }, { allowSignalWrites: true });
+    effect(
+      () => {
+        const id = this.patientId();
+        if (id !== null && id !== undefined) {
+          this.loadData();
+        } else {
+          this.items.set([]);
+        }
+      },
+      { allowSignalWrites: true },
+    );
   }
 
   ngOnInit() {
-    this.searchSub = this.searchSubject.pipe(
-      debounceTime(500),
-      distinctUntilChanged()
-    ).subscribe(query => {
-      this.searchQuery.set(query);
-      this.currentPage.set(1);
-    });
+    this.searchSub = this.searchSubject
+      .pipe(debounceTime(500), distinctUntilChanged())
+      .subscribe((query) => {
+        this.searchQuery.set(query);
+        this.currentPage.set(1);
+      });
   }
 
   ngOnDestroy() {
@@ -96,25 +100,22 @@ export class Payments implements OnInit, OnDestroy {
     if (id === null || id === undefined) return;
 
     this.isLoading.set(true);
-    this.recordsService.getPaymentsByPatientId(
-      id,
-      this.currentPage(),
-      this.pageSize(),
-      this.searchQuery().trim()
-    ).subscribe({
-      next: (wrapper) => {
-        const data = wrapper.data;
-        this.items.set(data.items);
-        this.totalPages.set(data.totalPages);
-        this.totalElements.set(data.totalElements);
-        this.isLast.set(data.isLast);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Failed to load payments', err);
-        this.isLoading.set(false);
-      }
-    });
+    this.recordsService
+      .getPaymentsByPatientId(id, this.currentPage(), this.pageSize(), this.searchQuery().trim())
+      .subscribe({
+        next: (wrapper) => {
+          const data = wrapper.data;
+          this.items.set(data.items);
+          this.totalPages.set(data.totalPages);
+          this.totalElements.set(data.totalElements);
+          this.isLast.set(data.isLast);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Failed to load payments', err);
+          this.isLoading.set(false);
+        },
+      });
   }
 
   onSearchChange(value?: string) {
@@ -164,10 +165,10 @@ export class Payments implements OnInit, OnDestroy {
 
     const dialogRef = this.dialog.open(RecordDialogPayment, {
       width: '480px',
-      data: { patientId: id }
+      data: { patientId: id },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.loadData();
       }
@@ -180,10 +181,10 @@ export class Payments implements OnInit, OnDestroy {
 
     const dialogRef = this.dialog.open(RecordDialogPayment, {
       width: '480px',
-      data: { patientId: id, payment }
+      data: { patientId: id, payment },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         this.loadData();
       }
@@ -191,17 +192,15 @@ export class Payments implements OnInit, OnDestroy {
   }
 
   onDelete(payment: Payment) {
-    this.confirmationService.confirm(
-      'Delete this payment record? This cannot be undone.',
-      'Delete Payment',
-      true
-    ).subscribe((confirmed) => {
-      if (confirmed) {
-        this.recordsService.deletePayment(payment.patientId, payment.id).subscribe(() => {
-          this.loadData();
-        });
-      }
-    });
+    this.confirmationService
+      .confirm('Delete this payment record? This cannot be undone.', 'Delete Payment', true)
+      .subscribe((confirmed) => {
+        if (confirmed) {
+          this.recordsService.deletePayment(payment.patientId, payment.id).subscribe(() => {
+            this.loadData();
+          });
+        }
+      });
   }
 
   onPrint(payment: Payment) {

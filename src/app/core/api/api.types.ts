@@ -123,6 +123,7 @@ export interface PaymentResponse {
   method?: 'CASH' | 'ONLINE' | 'CHEQUE';
   reference?: string;
   receivedDate?: string;
+  date?: string;
   createdAt?: string;
   updatedAt?: string;
 }

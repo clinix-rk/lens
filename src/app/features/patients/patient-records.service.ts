@@ -259,7 +259,7 @@ export class PatientRecordsService {
       amount: res.amount || 0,
       method: (res.method as PaymentMethod) || 'CASH',
       referenceName: res.reference || '',
-      date: (res as any).date || (res.createdAt ? res.createdAt.split('T')[0] : ''),
+      date: (res as any).date || '',
       receivedDate: (res as any).receivedDate || '',
       createdAt: res.createdAt || '',
       updatedAt: res.updatedAt || ''
